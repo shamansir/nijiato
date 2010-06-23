@@ -1,0 +1,56 @@
+sudo apt-get install sbcl darcs git
+darcs get http://common-lisp.net/project/babel/darcs/babel cl-babel
+darcs get http://common-lisp.net/project/iterate/darcs/iterate cl-iterate
+darcs get http://common-lisp.net/~loliveira/darcs/trivial-features cl-trivial-features
+darcs get http://common-lisp.net/~loliveira/darcs/trivial-garbagecl-trivial-garbage
+darcs get http://common-lisp.net/project/closer/darcs/closer-mop cl-closer-mop
+darcs get http://common-lisp.net/project/cffi/darcs/cffi cl-cffi
+darcs get http://common-lisp.net/project/bese/repos/fiveam/ cl-fiveam
+darcs get http://common-lisp.net/project/bese/repos/arnesi_dev/ cl-arnesi
+git clone git://common-lisp.net/projects/alexandria/alexandria.git cl-alexandria
+git clone git://gitorious.org/bordeaux-threads/bordeaux-threads.git cl-bordeaux-threads
+git clone git://gitorious.org/iolib/iolib.git cl-iolib
+git clone http://repo.or.cz/r/cl-v4l2.git cl-v4l2
+; git clone git://github.com/tpapp/cl-cairo2.git cl-cairo2
+git clone http://github.com/3b/cl-opengl.git cl-opengl
+git clone git://repo.or.cz/cl-gtk2.git cl-gtk2
+
+sudo apt-get install libv4l-dev
+/usr/lib/libv4l/v4l2convert.so
+
+wget http://mirrors.kernel.org/ubuntu/pool/universe/g/gtkglext/libgtkglext1_1.2.0-1ubuntu1_i386.deb
+sudo dpkg -i --force-architecture libgtkglext*
+
+~/.sbclrc:
+(print "...loading sbcl-rc")
+
+(require 'asdf)
+(require 'asdf-install)
+
+(push #p"/path-to/cl-babel/" asdf:*central-registry*)
+(push #p"/path-to/cl-iterate/" asdf:*central-registry*)
+(push #p"/path-to/cl-alexandria/" asdf:*central-registry*)
+(push #p"/path-to/cl-bordeaux-threads/" asdf:*central-registry*)
+(push #p"/path-to/cl-trivial-features/" asdf:*central-registry*)
+(push #p"/path-to/cl-trivial-garbage/" asdf:*central-registry*)
+(push #p"/path-to/cl-closer-mop/" asdf:*central-registry*)
+(push #p"/path-to/cl-cffi/" asdf:*central-registry*)
+(push #p"/path-to/cl-cairo2/" asdf:*central-registry*)
+(push #p"/path-to/cl-opengl/" asdf:*central-registry*)
+(push #p"/path-to/cl-v4l2/" asdf:*central-registry*)
+(push #p"/path-to/cl-arnesi/" asdf:*central-registry*)
+(push #p"/path-to/cl-fiveam/" asdf:*central-registry*)
+
+(push #p"/path-to/cl-iolib/src/" asdf:*central-registry*)
+(push #p"/path-to/cl-iolib/tests/" asdf:*central-registry*)
+;(push #p"/path-to/cl-iolib/examples/" asdf:*central-registry*)
+
+(push #p"/path-to/cl-gtk2/glib/" asdf:*central-registry*)
+(push #p"/path-to/cl-gtk2/pango/" asdf:*central-registry*)
+(push #p"/path-to/cl-gtk2/gdk/" asdf:*central-registry*)
+(push #p"/path-to/cl-gtk2/gtk/" asdf:*central-registry*)
+(push #p"/path-to/cl-gtk2/cairo/" asdf:*central-registry*)
+(push #p"/path-to/cl-gtk2/gtk-glext/" asdf:*central-registry*)
+
+
+sbcl --load ./eyes.lisp 
