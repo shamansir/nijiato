@@ -3,14 +3,14 @@
 ;; File is written by v.mayatskih@gmail.cpm
 ;; noted in this post: http://13-49.blogspot.com/2009/09/eye-region-tracking-in-common-lisp.html
 
-(asdf:oos 'asdf:test-op :iolib)
+;(asdf:oos 'asdf:test-op :iolib)
 (asdf:oos 'asdf:load-op :cl-v4l2)
 (asdf:oos 'asdf:load-op :cl-gtk2-gtkglext)
 (asdf:oos 'asdf:load-op :bordeaux-threads)
 
 (defpackage :eyes
-  (:use :common-lisp :gtk :gtkglext)
-  (:import-from :iolib.syscalls %sys-open %sys-close o-rdwr))
+  (:use :common-lisp :gtk :gtkglext))
+;  (:import-from :iolib.syscalls %sys-open %sys-close o-rdwr))
 
 (in-package :eyes)
 
@@ -246,7 +246,7 @@
 				    :initial-element #xff))))
 
 (defun video-init (device)
-  (let ((fd (%sys-open device o-rdwr)))
+  (let ((fd (isys:open device isys:o-rdwr)))
     (setq *capture-fd* fd)
     (diagnose fd)					; info about device
     (device-init fd)					; setup
@@ -257,7 +257,7 @@
 (defun video-uninit (fd buffers)
   (v4l2:stream-off fd)			; stop capturing
   (v4l2:unmap-buffers buffers)		; throw away buffers from memory
-  (%sys-close fd)				; close device
+  (isys:close fd)				; close device
   (format t "that's all!~%"))
 
 (defvar sigma)

@@ -5,8 +5,8 @@ darcs get http://common-lisp.net/~loliveira/darcs/trivial-features cl-trivial-fe
 darcs get http://common-lisp.net/~loliveira/darcs/trivial-garbagecl-trivial-garbage
 darcs get http://common-lisp.net/project/closer/darcs/closer-mop cl-closer-mop
 darcs get http://common-lisp.net/project/cffi/darcs/cffi cl-cffi
-darcs get http://common-lisp.net/project/bese/repos/fiveam/ cl-fiveam
-darcs get http://common-lisp.net/project/bese/repos/arnesi_dev/ cl-arnesi
+;darcs get http://common-lisp.net/project/bese/repos/fiveam/ cl-fiveam
+;darcs get http://common-lisp.net/project/bese/repos/arnesi_dev/ cl-arnesi
 git clone git://common-lisp.net/projects/alexandria/alexandria.git cl-alexandria
 git clone git://gitorious.org/bordeaux-threads/bordeaux-threads.git cl-bordeaux-threads
 git clone git://gitorious.org/iolib/iolib.git cl-iolib
@@ -38,19 +38,18 @@ sudo dpkg -i --force-architecture libgtkglext*
 (push #p"/path-to/cl-cairo2/" asdf:*central-registry*)
 (push #p"/path-to/cl-opengl/" asdf:*central-registry*)
 (push #p"/path-to/cl-v4l2/" asdf:*central-registry*)
-(push #p"/path-to/cl-arnesi/" asdf:*central-registry*)
-(push #p"/path-to/cl-fiveam/" asdf:*central-registry*)
+;(push #p"/path-to/cl-arnesi/" asdf:*central-registry*)
+;(push #p"/path-to/cl-fiveam/" asdf:*central-registry*)
 
 (push #p"/path-to/cl-iolib/src/" asdf:*central-registry*)
-(push #p"/path-to/cl-iolib/tests/" asdf:*central-registry*)
+;(push #p"/path-to/cl-iolib/tests/" asdf:*central-registry*)
 ;(push #p"/path-to/cl-iolib/examples/" asdf:*central-registry*)
 
 (push #p"/path-to/cl-gtk2/glib/" asdf:*central-registry*)
 (push #p"/path-to/cl-gtk2/pango/" asdf:*central-registry*)
 (push #p"/path-to/cl-gtk2/gdk/" asdf:*central-registry*)
 (push #p"/path-to/cl-gtk2/gtk/" asdf:*central-registry*)
-(push #p"/path-to/cl-gtk2/cairo/" asdf:*central-registry*)
+;(push #p"/path-to/cl-gtk2/cairo/" asdf:*central-registry*)
 (push #p"/path-to/cl-gtk2/gtk-glext/" asdf:*central-registry*)
-
 
 sbcl --load ./eyes.lisp 
