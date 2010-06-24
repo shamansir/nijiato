@@ -48,6 +48,7 @@
 	  (char-at 3 pixfmt)))
 
 (defun diagnose (fd)
+  (format t "started diagnostics~%")
   (let ((caps (v4l2:query-capabilities fd)))
     (format t (v4l2:%device-info caps))
     (unless (v4l2:capable caps v4l2:cap-video-capture)
@@ -89,6 +90,7 @@
 		       (format-string v4l2:pixelformat)))))))
 
 (defun device-init (fd)
+  (format t "initializing devide using v4l2~%")
   (v4l2:set-input fd 0)
   (without-errors
       (v4l2:set-control fd v4l2:cid-exposure 0.05))
@@ -107,6 +109,7 @@
 				    :initial-element #xff))))
 
 (defun video-init (device)
+  (format t "initializing video~%")
   (let ((fd (isys:open device isys:o-rdwr)))
     (setq *capture-fd* fd)
     (diagnose fd)					; info about device
@@ -116,13 +119,14 @@
       (values fd buffers))))
 
 (defun video-uninit (fd buffers)
+  (format t "unititilizing video~%")
   (v4l2:stream-off fd)			; stop capturing
   (v4l2:unmap-buffers buffers)		; throw away buffers from memory
   (isys:close fd)				; close device
   (format t "that's all!~%"))
 
 (defun capture-thread ()
-  (format t "cap thread start~%")
+  (format t "capturing thread start~%")
   (multiple-value-bind (fd buffers)
       (video-init *capture-device*)
     (loop thereis *cap-thread-stop* do
@@ -149,10 +153,11 @@
 
 	     (v4l2:put-frame fd frame))))	; put frame back to driver
     (video-uninit fd buffers))
-  (format t "cap thread exit~%"))
+  (format t "capturing thread exit~%"))
 
 (defun camera-init (widget)
   (declare (ignore widget))
+  (format t "camera initialization, binding opengl texture~%")
   (gl:clear-color 0.8 0.8 0.8 0.8)
   (gl:enable :texture-rectangle-arb :depth-test)
   (gl:depth-func :lequal)
@@ -184,10 +189,13 @@
   (gl:end-list)
 
   (gl:clear-depth 1.0)
-  (gl:flush))
+  (gl:flush)
+  
+  (format t "texture binding succesfull~%"))
 
 (defun camera-draw (widget event)
   (declare (ignore widget event))
+  (format t "drawing to the window~%")  
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (gl:bind-texture :texture-rectangle-arb 0)
 
@@ -230,8 +238,10 @@
   (gl:flush))
 
 (defun test ()
+  (format t "staring test~%")
   (let ((cap-thread (bt:make-thread #'capture-thread :name "capturer")))
     (with-main-loop
+      (format t "creating gtk window~%")
       (let ((window (make-instance 'gtk-window
 				   :type :toplevel
 				   :window-position :center
@@ -269,6 +279,7 @@
 				  (bt:condition-notify *render-thread-stop*)))
 
 ;; Capture process needs to know which widget to ask for redraw
+    (format t "attaching window source to camera~%")
 	(setq *camera-widget* (make-instance 'gl-drawing-area
 					     :on-init #'camera-init
 					     :on-expose #'camera-draw))

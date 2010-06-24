@@ -10,7 +10,6 @@
 
 (defpackage :eyes
   (:use :common-lisp :gtk :gtkglext))
-;  (:import-from :iolib.syscalls %sys-open %sys-close o-rdwr))
 
 (in-package :eyes)
 
