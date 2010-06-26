@@ -17,8 +17,10 @@
 (defparameter *capture-fd* nil)
 
 ;; what we want from camera
-(defvar *want-width* 352)
-(defvar *want-height* 288)
+; (defvar *want-width* 352)
+; (defvar *want-height* 288)
+(defvar *want-width* 640)
+(defvar *want-height* 480)
 
 ;; what we really get
 (defparameter *got-width* nil)
@@ -48,7 +50,7 @@
 	  (char-at 3 pixfmt)))
 
 (defun diagnose (fd)
-  (format t "started diagnostics~%")
+  (format t "diagnose: started diagnostics~%")
   (let ((caps (v4l2:query-capabilities fd)))
     (format t (v4l2:%device-info caps))
     (unless (v4l2:capable caps v4l2:cap-video-capture)
@@ -62,75 +64,89 @@
 		 (v4l2:get-tuner-params fd idx)
 		 ;; show tuner params
 		 ))))
+    (format t "diagnose: capabilities test passed~%")
 
-    (without-errors
+    (without-errors    
+    (format t "diagnose: started slots scanning~%")    
 	(loop for idx from 0 do
 	     (with-slots (v4l2:index v4l2:name v4l2:type v4l2:tuner)
 		 (v4l2:get-input-params fd idx)
-	       (format t "input [~D] name: ~A, type ~A~%"
+	       (format t "diagnose: input [~D] name: ~A, type ~A~%"
 		       v4l2:index
 		       v4l2:name
 		       (if (= v4l2:type v4l2:input-type-tuner) "tuner" "camera"))
 	       (when (= v4l2:type v4l2:input-type-tuner)
-		 (format t "input [~D] connected to tuner ~D~%" v4l2:index v4l2:tuner))
+		 (format t "diagnose: input [~D] connected to tuner ~D~%" v4l2:index v4l2:tuner))
 
 	       (without-errors
+           (format t "diagnose: checking slots~%")
 		   (loop for idx1 from 0 do
 			(with-slots (v4l2:index v4l2:name)
 			    (v4l2:get-input-standard fd idx1)
-			  (format t "input [~D] std [~D] name: ~A~%"
-				  idx v4l2:index v4l2:name)))))))
+			  (format t "diagnose: input [~D] std [~D] name: ~A~%"
+				  idx v4l2:index v4l2:name)))
+			(format t "diagnose: slots scanning complete~%")))))
 
+    (format t "diagnose: setting input manually~%")
     (v4l2:set-input fd 0)		; some cameras don't set input by default
 
     (without-errors
+    (format t "diagnose: checking formats~%")    
 	(loop for idx from 0 do
 	     (with-slots (v4l2:index v4l2:pixelformat) (v4l2:get-format fd idx)
-	       (format t "format [~D] ~S~%" v4l2:index
-		       (format-string v4l2:pixelformat)))))))
+	       (format t "diagnose: format [~D] ~S~%" v4l2:index
+		       (format-string v4l2:pixelformat))))
+	(format t "diagnose: formats check complete~%"))))
 
 (defun device-init (fd)
-  (format t "initializing devide using v4l2~%")
+  (format t "device-init: initializing devide using v4l2~%")
   (v4l2:set-input fd 0)
+  (format t "device-init: input assigned~%")
   (without-errors
       (v4l2:set-control fd v4l2:cid-exposure 0.05))
-  (format t "set ~Dx~D, format ~S~%" *want-width* *want-height*
+  (format t "device-init: set ~Dx~D, format ~S~%" *want-width* *want-height*
 	  (format-string v4l2:pix-fmt-rgb24))
   (v4l2:set-image-format fd *want-width* *want-height* v4l2:pix-fmt-rgb24)
+  (format t "device-init: parameters are set~%")  
   (with-slots (v4l2:width v4l2:height v4l2:sizeimage v4l2:pixelformat)
       (v4l2:format-pix (v4l2:get-image-format fd))
     (setf *got-width* v4l2:width
 	  *got-height* v4l2:height)
-    (format t "got ~Dx~D size ~D, format ~S~%"
+    (format t "device-init: got ~Dx~D size ~D, format ~S~%"
 	    v4l2:width v4l2:height
 	    v4l2:sizeimage (format-string v4l2:pixelformat))
     (setq *camera-data* (make-array (* 4 *got-height* *got-width*)
 				    :element-type '(unsigned-byte 8)
-				    :initial-element #xff))))
+				    :initial-element #xff)))
+  (format t "device-init: initialization finished~%"))
 
 (defun video-init (device)
-  (format t "initializing video~%")
+  (format t "video-init: initializing video~%")
   (let ((fd (isys:open device isys:o-rdwr)))
     (setq *capture-fd* fd)
     (diagnose fd)					; info about device
     (device-init fd)					; setup
     (let ((buffers (v4l2:map-buffers fd 4)))		; map 4 buffers into memory
+    
       (v4l2:stream-on fd buffers)			; start capturing
+      (format t "video-init: starting to capture~%")
       (values fd buffers))))
 
 (defun video-uninit (fd buffers)
-  (format t "unititilizing video~%")
+  (format t "video-unit: unititilizing video~%")
   (v4l2:stream-off fd)			; stop capturing
   (v4l2:unmap-buffers buffers)		; throw away buffers from memory
   (isys:close fd)				; close device
-  (format t "that's all!~%"))
+  (format t "video-unit: that's all!~%"))
 
 (defun capture-thread ()
-  (format t "capturing thread start~%")
+  (format t "capture-thread: capturing thread start~%")
   (multiple-value-bind (fd buffers)
       (video-init *capture-device*)
+    (format t "capture-thread: returned after init~%")
     (loop thereis *cap-thread-stop* do
 	 (let ((frame (without-errors (v4l2:get-frame fd))))		; get one frame from driver
+;     (format t "capture-thread: got frame~%")
 	   (when frame			; errors from v4l2convert.so are highly possible
 	     (multiple-value-bind (buffer address)
 		 (values-list (nth frame buffers))
@@ -148,22 +164,25 @@
 			      (aref *camera-data* (+ (* 4 i) 2)) b)))))
 
 	     (when *camera-widget*
+;          (format t "capture-thread: transfer frame~%")
 	       (with-main-loop
 		   (widget-queue-draw *camera-widget*)))
 
+;        (format t "capture-thread: return frame~%")
 	     (v4l2:put-frame fd frame))))	; put frame back to driver
     (video-uninit fd buffers))
-  (format t "capturing thread exit~%"))
+  (format t "capture-thread: capturing thread exit~%"))
 
 (defun camera-init (widget)
   (declare (ignore widget))
-  (format t "camera initialization, binding opengl texture~%")
+  (format t "camera-init: camera initialization, binding opengl texture~%")
   (gl:clear-color 0.8 0.8 0.8 0.8)
   (gl:enable :texture-rectangle-arb :depth-test)
   (gl:depth-func :lequal)
 
   (gl:bind-texture :texture-rectangle-arb 0)
 
+  (format t "camera-init: got-width: ~D; got-height: ~D~%" *got-width* *got-height*)
   (gl:tex-image-2d :texture-rectangle-arb
 		   0
 		   :rgb8
@@ -174,8 +193,10 @@
 		   :unsigned-byte
 		   *camera-data*)
 
+  (format t "camera-init: after-binding~%")
   (gl:new-list 1 :compile)
 
+  (format t "camera-init: making quads~%")
   (gl:begin :quads)
   (gl:tex-coord 0 *got-height*)
   (gl:vertex 0.0 0.0)
@@ -187,15 +208,17 @@
   (gl:vertex 1.0 0.0)
   (gl:end)
   (gl:end-list)
+  (format t "camera-init: quads made ~%")  
 
   (gl:clear-depth 1.0)
   (gl:flush)
+  (format t "camera-init: flush~%")  
   
-  (format t "texture binding succesfull~%"))
+  (format t "camera-init: texture binding succesfull~%"))
 
 (defun camera-draw (widget event)
   (declare (ignore widget event))
-  (format t "drawing to the window~%")  
+; (format t "camera-draw: drawing to the window~%")  
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (gl:bind-texture :texture-rectangle-arb 0)
 
@@ -238,10 +261,10 @@
   (gl:flush))
 
 (defun test ()
-  (format t "staring test~%")
+  (format t "test: staring test~%")
   (let ((cap-thread (bt:make-thread #'capture-thread :name "capturer")))
     (with-main-loop
-      (format t "creating gtk window~%")
+      (format t "test: creating gtk window objects~%")
       (let ((window (make-instance 'gtk-window
 				   :type :toplevel
 				   :window-position :center
@@ -257,7 +280,7 @@
 								   :upper 100d0
 								   :step-increment 1d0))))
 
-
+    (format t "test: connecting to value-changing handlers~%")
 	(gobject:connect-signal bright-spin "value-changed"
 				(lambda (widget)
 				  (let ((value (adjustment-value (spin-button-adjustment bright-spin))))
@@ -268,6 +291,8 @@
 					      (v4l2:set-control *capture-fd* v4l2:cid-brightness (/ value 100)))
 				      (v4l2:set-control *capture-fd* v4l2:cid-exposure (/ value 100))))))
 
+    (format t "test: connecting destorying handlers~%")
+    
 	(gobject:connect-signal quit-button "clicked"
 				(lambda (widget)
 				  (declare (ignore widget))
@@ -279,7 +304,7 @@
 				  (bt:condition-notify *render-thread-stop*)))
 
 ;; Capture process needs to know which widget to ask for redraw
-    (format t "attaching window source to camera~%")
+    (format t "test: attaching window source to camera~%")
 	(setq *camera-widget* (make-instance 'gl-drawing-area
 					     :on-init #'camera-init
 					     :on-expose #'camera-draw))
@@ -290,6 +315,7 @@
 	(container-add window hbox)
 	(widget-show window :all t)))
 
+    (format t "test: running main capturing thread~%")
 ;; Wait for window destruction
     (bt:with-lock-held (*render-thread-lock*)
       (bt:condition-wait *render-thread-stop* *render-thread-lock*))

@@ -52,15 +52,16 @@ sudo dpkg -i --force-architecture libgtkglext*
 ;(push #p"/path-to/cl-gtk2/cairo/" asdf:*central-registry*)
 (push #p"/path-to/cl-gtk2/gtk-glext/" asdf:*central-registry*)
 
-cl-v4l2/v4l2.lisp:
+cl-v4l2/v4l2.lisp, if 64bit system:
 ;; hack uint32->int32
-;; (defun ioctl (fd req arg)
-;;  (let ((req! (if (> req (ash 1 31))
-;;		  (- req (ash 1 32))
-;;		  req)))
-;;    (isys:ioctl fd req! arg)))
-
+(defun hack-ioctl (fd req arg)
+  (let ((req! (if (> req (ash 1 31))
+		  (- req (ash 1 32))
+		  req)))
+    (isys:ioctl fd req! arg)))
+    
 (defun ioctl (fd req arg)
-  (isys:ioctl fd req arg))
+   (isys:ioctl fd req arg))
 
-sbcl --load ./eyes.lisp 
+LD_PRELOAD=/usr/lib/libv4l/v4l2convert.so sbcl --load ./example-v4l2.lisp 
+LD_PRELOAD=/usr/lib64/libv4l/v4l2convert.so sbcl --load ./example-v4l2.lisp 
