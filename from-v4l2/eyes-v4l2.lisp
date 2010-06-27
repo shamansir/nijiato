@@ -1,6 +1,24 @@
-;; $ LD_PRELOAD=/usr/lib64/libv4l/v4l2convert.so sbcl --load example.lisp
+;; $ LD_PRELOAD=/usr/lib64/libv4l/v4l2convert.so sbcl --load eyes-v4l2.lisp
+;; $ LD_PRELOAD=/usr/lib/libv4l/v4l2convert.so sbcl --load eyes-v4l2.lisp
 
-;; File is written by v.mayatskih@gmail.cpm
+;; Copyright 2009 Vitaly Mayatskikh <v.mayatskih@gmail.com>
+;;
+;; This file is a part of CL-Video4Linux2
+;;
+;; CL-Video4Linux2 is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; CL-Video4Linux2 is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;; File is written by v.mayatskih@gmail.com
 ;; noted in this post: http://13-49.blogspot.com/2009/09/eye-region-tracking-in-common-lisp.html
 
 ;(asdf:oos 'asdf:test-op :iolib)
