@@ -1,5 +1,5 @@
-;; $ LD_PRELOAD=/usr/lib64/libv4l/v4l2convert.so sbcl --load example.lisp
-;; $ LD_PRELOAD=/usr/lib/libv4l/v4l2convert.so sbcl --load example.lisp
+;; $ LD_PRELOAD=/usr/lib64/libv4l/v4l2convert.so [rlwrap] sbcl --load nijiato-recognition.lisp
+;; $ LD_PRELOAD=/usr/lib/libv4l/v4l2convert.so [rlwrap] sbcl --load nijiato-recognition.lisp
 
 ;; This file is based on the example source code from CL-Video4Linux2 
 ;; distribution. CL-Video4Linux2 is distibuted under GNU General Public License 
@@ -50,6 +50,53 @@
 ;; ==============
 ;; Nijiato things
 ;; ==============
+
+; deltas                               r   g   b
+(defvar *deltas* (list :thumb  (vector 0.0 0.2 0.6)
+	               :index  (vector 0.2 0.6 0.3)
+                       :middle (vector 0.3 0.2 0.1)
+                       :ring   (vector 0.6 0.3 0.5)
+                       :little (vector 0.2 0.7 0.3)))
+
+; thumb red #
+; index orange #
+; middle yellow #
+; ring green #
+; little blue #
+
+; colors                               r   g   b
+(defvar *colors* (list :thumb  (vector 0.5 0.1 0.1)
+                       :index  (vector nil nil nil)
+                       :middle (vector nil nil nil)
+                       :ring   (vector nil nil nil)
+                       :little (vector nil nil nil)))
+
+; right-hand positions                                          x   y   z 
+(defparameter *rh-positions* (list :thumb  (list :start (vector nil nil nil) 
+                                                 :end   (vector nil nil nil))
+                                   :index  (list :start (vector nil nil nil) 
+                                                 :end   (vector nil nil nil))
+                                   :middle (list :start (vector nil nil nil) 
+                                                 :end   (vector nil nil nil))
+                                   :ring   (list :start (vector nil nil nil) 
+                                                 :end   (vector nil nil nil))
+                                   :little (list :start (vector nil nil nil) 
+                                                 :end   (vector nil nil nil))))
+
+; left-hand positions                                           x   y   z 
+(defparameter *lh-positions* (list :thumb  (list :start (vector nil nil nil) 
+                                                 :end   (vector nil nil nil))
+                                   :index  (list :start (vector nil nil nil) 
+                                                 :end   (vector nil nil nil))
+                                   :middle (list :start (vector nil nil nil) 
+                                                 :end   (vector nil nil nil))
+                                   :ring   (list :start (vector nil nil nil) 
+                                                 :end   (vector nil nil nil))
+                                   :little (list :start (vector nil nil nil) 
+                                                 :end   (vector nil nil nil))))
+
+(defparameter *positions* (list :right *rh-positions*
+                                :left  *lh-positions*))
 
 ;; ============
 ;; Program code
