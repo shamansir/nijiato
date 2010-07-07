@@ -51,25 +51,25 @@
 ;; Nijiato things
 ;; ==============
 
-; deltas                               r   g   b
-(defvar *deltas* (list :thumb  (vector 0.0 0.2 0.6)
-	               :index  (vector 0.2 0.6 0.3)
-                       :middle (vector 0.3 0.2 0.1)
-                       :ring   (vector 0.6 0.3 0.5)
-                       :little (vector 0.2 0.7 0.3)))
+; fingers-deltas                               r   g   b
+(defvar *fingers-deltas* (list :thumb  (vector 0.0 0.2 0.6)
+	                       :index  (vector 0.2 0.6 0.3)
+                               :middle (vector 0.3 0.2 0.1)
+                               :ring   (vector 0.6 0.3 0.5)
+                               :little (vector 0.2 0.7 0.3)))
 
-; thumb red #
-; index orange #
-; middle yellow #
-; ring green #
-; little blue #
+; thumb red #f95f98 249:95:152 r > b, b > g; (b - g) ~ (r - b)
+; index orange #fa9eaa 250:158:170 r > g, r > b; g ~ b;
+; middle yellow #faffc9 250:255:201 r ~ g; r > b, g > b; (r - b) ~ (g - b) 
+; ring green #5b8b7d 91:139:125 g > r, g > b; r ~ b; (g - r) ~ (g - b)
+; little blue #5793c5 87:147:197 b > g > r; (b - g) ~ (g - b)
 
-; colors                               r   g   b
-(defvar *colors* (list :thumb  (vector 0.5 0.1 0.1)
-                       :index  (vector nil nil nil)
-                       :middle (vector nil nil nil)
-                       :ring   (vector nil nil nil)
-                       :little (vector nil nil nil)))
+; fingers-colors                               r   g   b
+(defvar *fingers-colors* (list :thumb  (vector 0.5 0.1 0.1)
+                               :index  (vector nil nil nil)
+                               :middle (vector nil nil nil)
+                               :ring   (vector nil nil nil)
+                               :little (vector nil nil nil)))
 
 ; right-hand positions                                          x   y   z 
 (defparameter *rh-positions* (list :thumb  (list :start (vector nil nil nil) 
@@ -95,8 +95,22 @@
                                    :little (list :start (vector nil nil nil) 
                                                  :end   (vector nil nil nil))))
 
-(defparameter *positions* (list :right *rh-positions*
-                                :left  *lh-positions*))
+(defparameter *hands-positions* (list :right *rh-positions*
+                                      :left  *lh-positions*))
+
+; 2-dimensional array (width * height) filled with values for colors:
+; 00 for none
+; 01-09 for r-thumb
+; 10-19 for r-index
+; 20-29 for r-middle
+; 30-39 for r-ring
+; 40-49 for r-little
+; 50-59 for l-thumb
+; 60-69 for l-index
+; 70-79 for l-middle
+; 80-89 for l-ring
+; 90-99 for l-little
+(defparameter *colors-values* nil)
 
 ;; ============
 ;; Program code
@@ -220,6 +234,9 @@
   (format t "capture-thread: capturing thread start~%")
   (multiple-value-bind (fd buffers)
       (video-init *capture-device*)
+    (setq *colors-values* (make-array (* *got-width* *got-height*)
+                           :element-type '(unsigned-byte 8)
+                           :initial-element 0))
     (format t "capture-thread: returned after init~%")
     (loop thereis *cap-thread-stop* do
       ; get one frame from driver
@@ -238,7 +255,10 @@
 
 			(setf (aref *camera-data* (+ (* 4 i) 0)) r
 			      (aref *camera-data* (+ (* 4 i) 1)) g
-			      (aref *camera-data* (+ (* 4 i) 2)) b)))))
+			      (aref *camera-data* (+ (* 4 i) 2)) b))
+		      
+		        ;(format t "~d:~d:~d" r g b)
+		      )))
 
 	     (when *camera-widget*
 	       (with-main-loop
@@ -338,6 +358,12 @@
 
   (gl:call-list 1)
   (gl:flush))
+
+;; ====== Nijiato funcs
+
+
+
+;; ====== / Nijiato funcs
 
 ;; => run-nijiato
 
