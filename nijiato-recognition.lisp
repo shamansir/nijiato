@@ -64,12 +64,12 @@
 ; ring green #5b8b7d 91:139:125 g > r, g > b; r ~ b; (g - r) ~ (g - b)
 ; little blue #5793c5 87:147:197 b > g > r; (b - g) ~ (g - b)
 
-; fingers-colors                               r   g   b
-(defvar *fingers-colors* (list :thumb  (vector 0.5 0.1 0.1)
-                               :index  (vector nil nil nil)
-                               :middle (vector nil nil nil)
-                               :ring   (vector nil nil nil)
-                               :little (vector nil nil nil)))
+; fingers-colors                               r    g    b
+(defvar *fingers-colors* (list :thumb  (vector 0.98 0.37 0.60)
+                               :index  (vector 0.98 0.62 0.66)
+                               :middle (vector 0.98 1.00 0.79)
+                               :ring   (vector 0.36 0.55 0.49)
+                               :little (vector 0.34 0.58 0.77)))
 
 ; right-hand positions                                          x   y   z 
 (defparameter *rh-positions* (list :thumb  (list :start (vector nil nil nil) 
@@ -112,25 +112,58 @@
 ; 90-99 for l-little
 (defparameter *colors-values* nil)
 
-;; ====== Nijiato funcs
-
-;; returns 00-99 value for (un)detected finger states for concrete pixel to 
-;; put it in *colors-values* array
-
-(defun get-finger-value (r g b)
-  (if (> r 250) 1 0))
-
-;; ====== / Nijiato funcs
-
-;; ============
-;; Program code
-;; ============
+;; ====== Nijiato macro
 
 (defmacro .print-log. (&body body)
   `(format *error-output* ,@body))
 
 (defmacro %send-out (&body body)
   `(format *standard-output* ,@body))
+
+; Usage: (.plist/map. (list :a 2 :b 3 :c 4) (lambda (k v) (format t "~a~%" (list k v)))
+(defmacro .plist/map. (plist func)
+  (let ((key-name (gensym)) 
+        (value-name (gensym))) 
+    `(loop for (,key-name ,value-name . nil) on ,plist by #'cddr do 
+                          (funcall (,@func) ,key-name ,value-name))))
+
+; Usage: (.plist/map. (list :a 2 :b 3 :c 4) (lambda (k v l) (format t "~a~%" (list k v l)))
+(defmacro .plist/map-inline. (plist func) 
+  (let ((key-name (gensym)) 
+        (value-name (gensym))) 
+    `(loop for (,key-name ,value-name . nil) on ,plist by #'cddr do 
+                          (funcall (,@func) ,key-name ,value-name ,plist))))
+
+;; ====== Nijiato funcs
+
+;; returns 00-99 value for (un)detected finger states for concrete pixel to 
+;; put it in *colors-values* array
+
+(defun get-finger-value (r g b)
+  (.plist/map. *fingers-colors* 
+     (lambda (finger-name required-colors) 
+        (let* ((deltas (getf *fingers-deltas* finger-name))
+	       (rr (elt required-colors 0))
+               (gg (elt required-colors 1))
+               (bb (elt required-colors 2))
+               (dr (elt deltas 0))
+	       (dg (elt deltas 1))
+	       (db (elt deltas 2)))
+	   (if (and 
+                 (plusp  (+ (- r rr) dr))
+                 (minusp (- (- r rr) dr))
+                 (plusp  (+ (- g gg) dg))
+                 (minusp (- (- g gg) dg))
+	         (plusp  (+ (- b bb) db))
+	         (minusp (- (- b bb) db)))
+	       (return-from get-finger-value 1)))))
+  0)
+
+;; ====== / Nijiato funcs
+
+;; ============
+;; Program code
+;; ============
 
 (defmacro without-errors (&body body)
   `(handler-case (progn ,@body)
