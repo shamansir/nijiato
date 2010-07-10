@@ -52,11 +52,11 @@
 ;; ==============
 
 ; fingers-deltas                               r   g   b
-(defvar *fingers-deltas* (list :thumb  (vector 0.0 0.2 0.6)
-	                       :index  (vector 0.2 0.6 0.3)
-                               :middle (vector 0.3 0.2 0.1)
-                               :ring   (vector 0.6 0.3 0.5)
-                               :little (vector 0.2 0.7 0.3)))
+(defvar *fingers-deltas* (list :thumb  (vector 0.02 0.01 0.01)
+	                       :index  (vector 0.02 0.01 0.01)
+                               :middle (vector 0.02 0.02 0.01)
+                               :ring   (vector 0.01 0.02 0.01)
+                               :little (vector 0.01 0.01 0.02)))
 
 ; thumb red #f95f98 249:95:152 r > b, b > g; (b - g) ~ (r - b)
 ; index orange #fa9eaa 250:158:170 r > g, r > b; g ~ b;
@@ -149,6 +149,7 @@
                (dr (elt deltas 0))
 	       (dg (elt deltas 1))
 	       (db (elt deltas 2)))
+	   ; (format t "~a got: ~a required: ~a~% deltas: ~a~%" finger-name (list r g b) required-colors deltas)
 	   (if (and 
                  (plusp  (+ (- r rr) dr))
                  (minusp (- (- r rr) dr))
@@ -305,7 +306,7 @@
                             (g (cffi:mem-aref address :uchar (+ (* 3 i) 1)))
                             (b (cffi:mem-aref address :uchar (+ (* 3 i) 2))))
 
-			(setf (aref *colors-values* i) (get-finger-value r g b))
+			(setf (aref *colors-values* i) (get-finger-value (/ r 255) (/ g 255) (/ b 255)))
 
 			(if (= (elt *colors-values* i) 0)
                             (setf (aref *camera-data* (+ (* 4 i) 0)) r
@@ -478,4 +479,36 @@
     (setq *cap-thread-stop* t)
     (bt:join-thread cap-thread)))
 
-(run-nijiato)
+; (run-nijiato)
+
+(.plist/map. (list :test-thumb-1 (vector 249 95 152) ; must be true
+		   :test-thumb-2 (vector 250 95 152) ; must be true
+		   :test-thumb-3 (vector 248 94 153) ; must be true
+		   :test-thumb-4 (vector 230 95 152) ; must be false
+		   :test-thumb-5 (vector 230 95 180) ; must be false
+                   :test-index-1 (vector 250 158 170) ; must be true
+		   :test-index-2 (vector 249 157 170) ; must be true
+		   :test-index-3 (vector 251 156 169) ; must be true
+		   :test-index-4 (vector 120 170 140) ; must be false
+		   :test-index-5 (vector 244 158 170) ; must be false
+                   :test-middle-1 (vector 250 255 201) ; must be true
+		   :test-middle-2 (vector 252 256 201) ; must be true
+		   :test-middle-3 (vector 249 255 201) ; must be true
+		   :test-middle-4 (vector 244 255 201) ; must be false
+		   :test-middle-5 (vector 244 240 201) ; must be false
+                   :test-ring-1 (vector 91 139 125) ; must be true
+		   :test-ring-2 (vector 91 138 125) ; must be true
+		   :test-ring-3 (vector 91 140 125) ; must be true
+		   :test-ring-4 (vector 93 133 125) ; must be false
+		   :test-ring-5 (vector 84 139 125) ; must be false
+                   :test-little-1 (vector 87 147 197) ; must be true
+		   :test-little-2 (vector 87 147 198) ; must be true
+		   :test-little-3 (vector 87 147 196) ; must be true
+		   :test-little-4 (vector 87 147 190) ; must be false
+		   :test-little-5 (vector 80 147 197)) ; must be false
+
+	     (lambda (k v) 
+                     (format t "~a~%" 
+                          (list k (get-finger-value (/ (elt v 0) 255.0)
+                                                    (/ (elt v 1) 255.0)
+                                                    (/ (elt v 2) 255.0))))))
