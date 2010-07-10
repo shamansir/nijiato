@@ -25,10 +25,10 @@
 (defparameter *capture-fd* nil)
 
 ;; what we want from camera
-; (defvar *want-width* 352)
-; (defvar *want-height* 288)
-(defvar *want-width* 640)
-(defvar *want-height* 480)
+(defvar *want-width* 352)
+(defvar *want-height* 288)
+; (defvar *want-width* 640)
+; (defvar *want-height* 480)
 
 ;; what we really get
 (defparameter *got-width* nil)
@@ -51,35 +51,41 @@
 ;; Nijiato things
 ;; ==============
 
-; fingers-deltas                               r   g   b
+;; fingers-deltas                              r   g   b
 #|
 (defvar *fingers-deltas* (list :thumb  (vector 0.02 0.01 0.01)
-	                       :index  (vector 0.02 0.01 0.01)
+                               :index  (vector 0.02 0.01 0.01)
                                :middle (vector 0.02 0.02 0.01)
                                :ring   (vector 0.01 0.02 0.01)
                                :little (vector 0.01 0.01 0.02)))
 |#
-
 (defvar *fingers-deltas* (list :thumb  (vector 0.2 0.1 0.1)
-	                       :index  (vector 0.2 0.1 0.1)
+                               :index  (vector 0.2 0.1 0.1)
                                :middle (vector 0.2 0.2 0.1)
                                :ring   (vector 0.1 0.2 0.1)
                                :little (vector 0.1 0.1 0.2)))
 
-; thumb red #f95f98 249:95:152 r > b, b > g; (b - g) ~ (r - b)
-; index orange #fa9eaa 250:158:170 r > g, r > b; g ~ b;
-; middle yellow #faffc9 250:255:201 r ~ g; r > b, g > b; (r - b) ~ (g - b) 
-; ring green #5b8b7d 91:139:125 g > r, g > b; r ~ b; (g - r) ~ (g - b)
-; little blue #5793c5 87:147:197 b > g > r; (b - g) ~ (g - b)
-
-; fingers-colors                               r    g    b
+;; fingers-colors:
+;; thumb red #f95f98 249:95:152 r > b, b > g; (b - g) ~ (r - b)
+;; index orange #fa9eaa 250:158:170 r > g, r > b; g ~ b;
+;; middle yellow #faffc9 250:255:201 r ~ g; r > b, g > b; (r - b) ~ (g - b) 
+;; ring green #5b8b7d 91:139:125 g > r, g > b; r ~ b; (g - r) ~ (g - b)
+;; little blue #5793c5 87:147:197 b > g > r; (b - g) ~ (g - b)
+;;                                             r    g    b
 (defvar *fingers-colors* (list :thumb  (vector 0.98 0.37 0.60)
                                :index  (vector 0.98 0.62 0.66)
                                :middle (vector 0.98 1.00 0.79)
                                :ring   (vector 0.36 0.55 0.49)
                                :little (vector 0.34 0.58 0.77)))
 
-; right-hand positions                                          x   y   z 
+;; shifts
+(defvar *fingers-shifts* (list :thumb  0
+                               :index  10
+                               :middle 20
+                               :ring   30
+                               :little 40))
+
+;; right-hand positions                                         x   y   z 
 (defparameter *rh-positions* (list :thumb  (list :start (vector nil nil nil) 
                                                  :end   (vector nil nil nil))
                                    :index  (list :start (vector nil nil nil) 
@@ -91,7 +97,7 @@
                                    :little (list :start (vector nil nil nil) 
                                                  :end   (vector nil nil nil))))
 
-; left-hand positions                                           x   y   z 
+;; left-hand positions                                          x   y   z 
 (defparameter *lh-positions* (list :thumb  (list :start (vector nil nil nil) 
                                                  :end   (vector nil nil nil))
                                    :index  (list :start (vector nil nil nil) 
@@ -106,19 +112,19 @@
 (defparameter *hands-positions* (list :right *rh-positions*
                                       :left  *lh-positions*))
 
-; 2-dimensional array (width * height) filled with values for colors:
-; 00 for none
-; 01-09 for r-thumb
-; 10-19 for r-index
-; 20-29 for r-middle
-; 30-39 for r-ring
-; 40-49 for r-little
-; 50-59 for l-thumb
-; 60-69 for l-index
-; 70-79 for l-middle
-; 80-89 for l-ring
-; 90-99 for l-little
-(defparameter *colors-values* nil)
+;; 2-dimensional array (width * height) filled with values for colors:
+;; 00 for none
+;; 01-09 for r-thumb
+;; 10-19 for r-index
+;; 20-29 for r-middle
+;; 30-39 for r-ring
+;; 40-49 for r-little
+;; 50-59 for l-thumb
+;; 60-69 for l-index
+;; 70-79 for l-middle
+;; 80-89 for l-ring
+;; 90-99 for l-little
+(defparameter *fingers-values* nil)
 
 ;; ====== Nijiato macro
 
@@ -128,14 +134,14 @@
 (defmacro %send-out (&body body)
   `(format *standard-output* ,@body))
 
-; Usage: (.plist/map. (list :a 2 :b 3 :c 4) (lambda (k v) (format t "~a~%" (list k v)))
+;; Usage: (.plist/map. (list :a 2 :b 3 :c 4) (lambda (k v) (format t "~a~%" (list k v)))
 (defmacro .plist/map. (plist func)
   (let ((key-name (gensym)) 
         (value-name (gensym))) 
     `(loop for (,key-name ,value-name . nil) on ,plist by #'cddr do 
                           (funcall (,@func) ,key-name ,value-name))))
 
-; Usage: (.plist/map. (list :a 2 :b 3 :c 4) (lambda (k v l) (format t "~a~%" (list k v l)))
+;; Usage: (.plist/map. (list :a 2 :b 3 :c 4) (lambda (k v l) (format t "~a~%" (list k v l)))
 (defmacro .plist/map-inline. (plist func) 
   (let ((key-name (gensym)) 
         (value-name (gensym))) 
@@ -151,7 +157,7 @@
   (.plist/map. *fingers-colors* 
      (lambda (finger-name required-colors) 
         (let* ((deltas (getf *fingers-deltas* finger-name))
-	       (rr (elt required-colors 0))
+               (rr (elt required-colors 0))
                (gg (elt required-colors 1))
                (bb (elt required-colors 2))
                (dr (elt deltas 0))
@@ -159,14 +165,30 @@
 	       (db (elt deltas 2)))
 	   ; (format t "~a got: ~a required: ~a~% deltas: ~a~%" finger-name (list r g b) required-colors deltas)
 	   (if (and 
-                 (plusp  (+ (- r rr) dr))
-                 (minusp (- (- r rr) dr))
-                 (plusp  (+ (- g gg) dg))
-                 (minusp (- (- g gg) dg))
-	         (plusp  (+ (- b bb) db))
-	         (minusp (- (- b bb) db)))
-	       (return-from get-finger-value 1)))))
+             (plusp  (+ (- r rr) dr))
+             (minusp (- (- r rr) dr))
+             (plusp  (+ (- g gg) dg))
+             (minusp (- (- g gg) dg))
+             (plusp  (+ (- b bb) db))
+             (minusp (- (- b bb) db)))
+             (return-from get-finger-value (+ 9 (getf *fingers-shifts* finger-name))))))))
   0)
+
+(defun _cffv (value)
+  (cond ((= value 0)   (return-from _cffv (vector 0 0 0)))
+        ((< value 10)  (return-from _cffv (vector 255 0   50 ))) ; r-thumb  / red
+        ((< value 20)  (return-from _cffv (vector 255 100 100))) ; r-index  / orange
+        ((< value 30)  (return-from _cffv (vector 255 255 100))) ; r-middle / yellow
+        ((< value 40)  (return-from _cffv (vector 0   255 0  ))) ; r-ring   / green
+        ((< value 50)  (return-from _cffv (vector 0   0   255))) ; r-little / blue
+        ((< value 60)  (return-from _cffv (vector 255 0   50 ))) ; l-thumb  / red
+        ((< value 70)  (return-from _cffv (vector 255 100 100))) ; l-index  / orange
+        ((< value 80)  (return-from _cffv (vector 255 255 100))) ; l-middle / yellow
+        ((< value 90)  (return-from _cffv (vector 0   255 0  ))) ; l-ring   / green
+        ((< value 100) (return-from _cffv (vector 0   0   255))) ; l-little / blue
+  ) (vector 0 0 0))
+
+(defun color-from-finger-value (value) (_cffv value))
 
 ;; ====== / Nijiato funcs
 
@@ -202,31 +224,30 @@
       (without-errors
 	  (loop for idx from 0 do
 	       (progn
-		 (v4l2:get-tuner-params fd idx)
-		 ;; show tuner params
-		 ))))
+		      (v4l2:get-tuner-params fd idx)
+		      ;; show tuner params
+		   ))))
     (.print-log. "diagnose: capabilities test passed~%")
 
     (without-errors    
     (.print-log. "diagnose: started slots scanning~%")    
 	(loop for idx from 0 do
 	   (with-slots (v4l2:index v4l2:name v4l2:type v4l2:tuner)
-		       (v4l2:get-input-params fd idx)
+                       (v4l2:get-input-params fd idx)
 	     (.print-log. "diagnose: input [~D] name: ~A, type ~A~%"
-		       v4l2:index
+   	               v4l2:index
 		       v4l2:name
-	  	      (if (= v4l2:type v4l2:input-type-tuner) "tuner" "camera"))
+           	       (if (= v4l2:type v4l2:input-type-tuner) "tuner" "camera"))
 	     (when (= v4l2:type v4l2:input-type-tuner)
 	       (.print-log. "diagnose: input [~D] connected to tuner ~D~%" v4l2:index v4l2:tuner))
-
 	       (without-errors
            (.print-log. "diagnose: checking slots~%")
 		   (loop for idx1 from 0 do
-			(with-slots (v4l2:index v4l2:name)
+			  (with-slots (v4l2:index v4l2:name)
 			    (v4l2:get-input-standard fd idx1)
-			  (.print-log. "diagnose: input [~D] std [~D] name: ~A~%"
-				  idx v4l2:index v4l2:name)))
-			(.print-log. "diagnose: slots scanning complete~%")))))
+			    (.print-log. "diagnose: input [~D] std [~D] name: ~A~%"
+				                                     idx v4l2:index v4l2:name)))
+	   (.print-log. "diagnose: slots scanning complete~%")))))
 
     (.print-log. "diagnose: setting input manually~%")
     (v4l2:set-input fd 0)	       ; some cameras don't set input by default
@@ -253,14 +274,14 @@
   (.print-log. "device-init: parameters are set~%")  
   (with-slots (v4l2:width v4l2:height v4l2:sizeimage v4l2:pixelformat)
       (v4l2:format-pix (v4l2:get-image-format fd))
-    (setf *got-width* v4l2:width
-	  *got-height* v4l2:height)
-    (.print-log. "device-init: got ~Dx~D size ~D, format ~S~%"
-	    v4l2:width v4l2:height
-	    v4l2:sizeimage (format-string v4l2:pixelformat))
-    (setq *camera-data* (make-array (* 4 *got-height* *got-width*)
-				    :element-type '(unsigned-byte 8)
-				    :initial-element #xff)))
+      (setf *got-width* v4l2:width
+	        *got-height* v4l2:height)
+      (.print-log. "device-init: got ~Dx~D size ~D, format ~S~%"
+	                           v4l2:width v4l2:height
+	                           v4l2:sizeimage (format-string v4l2:pixelformat))
+      (setq *camera-data* (make-array (* 4 *got-height* *got-width*)
+				           :element-type '(unsigned-byte 8)
+  				           :initial-element #xff)))
   (.print-log. "device-init: initialization finished~%"))
 
 ;; => video-init
@@ -269,11 +290,10 @@
   (.print-log. "video-init: initializing video~%")
   (let ((fd (isys:open device isys:o-rdwr)))
     (setq *capture-fd* fd)
-    (diagnose fd)					; info about device
-    (device-init fd)	      			; setup
-    (let ((buffers (v4l2:map-buffers fd 4)))	; map 4 buffers into memory
-    
-      (v4l2:stream-on fd buffers)			; start capturing
+    (diagnose fd) ; info about device
+    (device-init fd) ; setup
+    (let ((buffers (v4l2:map-buffers fd 4))) ; map 4 buffers into memory    
+      (v4l2:stream-on fd buffers) ; start capturing
       (.print-log. "video-init: starting to capture~%")
       (values fd buffers))))
 
@@ -281,9 +301,9 @@
 
 (defun video-uninit (fd buffers)
   (.print-log. "video-unit: unititializing video~%")
-  (v4l2:stream-off fd)			; stop capturing
-  (v4l2:unmap-buffers buffers)		; throw away buffers from memory
-  (isys:close fd)				; close device
+  (v4l2:stream-off fd) ; stop capturing
+  (v4l2:unmap-buffers buffers) ; throw away buffers from memory
+  (isys:close fd) ; close device
   (.print-log. "video-unit: that's all!~%"))
 
 ;; => capture-thread
@@ -291,8 +311,8 @@
 (defun capture-thread ()
   (.print-log. "capture-thread: capturing thread start~%")
   (multiple-value-bind (fd buffers)
-      (video-init *capture-device*)
-    (setq *colors-values* (make-array (* *got-width* *got-height*)
+    (video-init *capture-device*)
+    (setq *fingers-values* (make-array (* *got-width* *got-height*)
                            :element-type '(unsigned-byte 8)
                            :initial-element 0))
     (setf frame-num 0)
@@ -314,15 +334,16 @@
                             (g (cffi:mem-aref address :uchar (+ (* 3 i) 1)))
                             (b (cffi:mem-aref address :uchar (+ (* 3 i) 2))))
 
-			(setf (aref *colors-values* i) (get-finger-value (/ r 255) (/ g 255) (/ b 255)))
+			(setf (aref *fingers-values* i) (get-finger-value (/ r 255) (/ g 255) (/ b 255)))
 
-			(if (= (elt *colors-values* i) 0)
+			(if (= (elt *fingers-values* i) 0)
                             (setf (aref *camera-data* (+ (* 4 i) 0)) r
                                   (aref *camera-data* (+ (* 4 i) 1)) g
                                   (aref *camera-data* (+ (* 4 i) 2)) b)
-			    (setf (aref *camera-data* (+ (* 4 i) 0)) 255
-				  (aref *camera-data* (+ (* 4 i) 1)) 0
-				  (aref *camera-data* (+ (* 4 i) 2)) 0))))))
+			    (let ((new-color (color-from-finger-value (elt *fingers-values* i))))
+			         (setf (aref *camera-data* (+ (* 4 i) 0)) (elt new-color 0)
+				       (aref *camera-data* (+ (* 4 i) 1)) (elt new-color 1)
+				       (aref *camera-data* (+ (* 4 i) 2)) (elt new-color 2))))))))
 
 	     (when *camera-widget*
 	       (with-main-loop
@@ -398,14 +419,14 @@
   ;; Keep ratio 4:3
   (multiple-value-bind (w h)
       (gdk:drawable-get-size (widget-window widget))
-    (let ((w1 w)
-	  (h1 h))
+      (let ((w1 w)
+  	        (h1 h))
       (when (and (> w 0) (> h 0))
-	(if (> (/ w h) 4/3)
-	    (setq h1 h
-		  w1 (* h 4/3))
-	    (setq w1 w
-		  h1 (* w 3/4))))
+	        (if (> (/ w h) 4/3)
+	            (setq h1 h
+		              w1 (* h 4/3))
+	            (setq w1 w
+		              h1 (* w 3/4))))
       (gl:viewport 0 0 w1 h1)))
 
   (gl:matrix-mode :projection)
@@ -487,4 +508,27 @@
     (setq *cap-thread-stop* t)
     (bt:join-thread cap-thread)))
 
-(run-nijiato)
+; (run-nijiato)
+
+(.plist/map. (list :zero 0
+                   :one 1
+                   :nine 9
+                   :eleven 11
+                   :sixteen 16
+                   :twenty-five 25
+                   :thirty 30
+                   :thirty-two 32
+                   :fourty-three 43
+                   :fifty-six 56
+                   :sixty-one 61
+                   :sixty-seven 67
+                   :seventy 70
+                   :seventy-three 73
+                   :seventy-seven 77
+                   :eighty-five 85
+                   :eighty-nine 89
+                   :ninety-eight 98
+                   :ninety-nine 99
+                   :one-hundred 100
+                   :one-hundred-and-one 101)
+	     (lambda (k v) (format t "key ~a val ~a~%" k (color-from-finger-value v))))
