@@ -171,7 +171,7 @@
              (minusp (- (- g gg) dg))
              (plusp  (+ (- b bb) db))
              (minusp (- (- b bb) db)))
-             (return-from get-finger-value (+ 9 (getf *fingers-shifts* finger-name))))))))
+             (return-from get-finger-value (+ 9 (getf *fingers-shifts* finger-name)))))))
   0)
 
 (defun _cffv (value)
@@ -508,27 +508,4 @@
     (setq *cap-thread-stop* t)
     (bt:join-thread cap-thread)))
 
-; (run-nijiato)
-
-(.plist/map. (list :zero 0
-                   :one 1
-                   :nine 9
-                   :eleven 11
-                   :sixteen 16
-                   :twenty-five 25
-                   :thirty 30
-                   :thirty-two 32
-                   :fourty-three 43
-                   :fifty-six 56
-                   :sixty-one 61
-                   :sixty-seven 67
-                   :seventy 70
-                   :seventy-three 73
-                   :seventy-seven 77
-                   :eighty-five 85
-                   :eighty-nine 89
-                   :ninety-eight 98
-                   :ninety-nine 99
-                   :one-hundred 100
-                   :one-hundred-and-one 101)
-	     (lambda (k v) (format t "key ~a val ~a~%" k (color-from-finger-value v))))
+(run-nijiato)
