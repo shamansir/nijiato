@@ -234,14 +234,14 @@
 	(loop for idx from 0 do
 	   (with-slots (v4l2:index v4l2:name v4l2:type v4l2:tuner)
                        (v4l2:get-input-params fd idx)
-	     (.print-log. "diagnose: input [~D] name: ~A, type ~A~%"
-   	               v4l2:index
-		       v4l2:name
-           	       (if (= v4l2:type v4l2:input-type-tuner) "tuner" "camera"))
-	     (when (= v4l2:type v4l2:input-type-tuner)
-	       (.print-log. "diagnose: input [~D] connected to tuner ~D~%" v4l2:index v4l2:tuner))
-	       (without-errors
-           (.print-log. "diagnose: checking slots~%")
+	       (.print-log. "diagnose: input [~D] name: ~A, type ~A~%"
+                                                            v4l2:index
+                                                            v4l2:name
+                  (if (= v4l2:type v4l2:input-type-tuner) "tuner" "camera"))
+               (when (= v4l2:type v4l2:input-type-tuner)
+                  (.print-log. "diagnose: input [~D] connected to tuner ~D~%" v4l2:index v4l2:tuner))
+               (without-errors
+                   (.print-log. "diagnose: checking slots~%")
 		   (loop for idx1 from 0 do
 			  (with-slots (v4l2:index v4l2:name)
 			    (v4l2:get-input-standard fd idx1)
@@ -256,8 +256,8 @@
     (.print-log. "diagnose: checking formats~%")    
 	(loop for idx from 0 do
 	     (with-slots (v4l2:index v4l2:pixelformat) (v4l2:get-format fd idx)
-	       (.print-log. "diagnose: format [~D] ~S~%" v4l2:index
-		       (format-string v4l2:pixelformat))))
+	        (.print-log. "diagnose: format [~D] ~S~%" v4l2:index
+		                           (format-string v4l2:pixelformat))))
 	(.print-log. "diagnose: formats check complete~%"))))
 
 ;; => device-init
@@ -269,7 +269,7 @@
   (without-errors
       (v4l2:set-control fd v4l2:cid-exposure 0.05))
   (.print-log. "device-init: set ~Dx~D, format ~S~%" *want-width* *want-height*
-	  (format-string v4l2:pix-fmt-rgb24))
+	                                (format-string v4l2:pix-fmt-rgb24))
   (v4l2:set-image-format fd *want-width* *want-height* v4l2:pix-fmt-rgb24)
   (.print-log. "device-init: parameters are set~%")  
   (with-slots (v4l2:width v4l2:height v4l2:sizeimage v4l2:pixelformat)
@@ -446,6 +446,27 @@
 
 ;; => run-nijiato
 
+(defun _make-color-spin (name)
+    (make-instance 'spin-button :label name
+                                :adjustment (make-instance 'adjustment
+                                                           :lower 0d0
+                                                           :upper 255d0
+                                                           :step-increment 1d0)))
+(defun _make-delta-spin (name)
+    (make-instance 'spin-button :label name
+                                :adjustment (make-instance 'adjustment
+                                                           :lower 0.0
+                                                           :upper 1.0
+                                                           :step-increment 0.01)))
+
+(defun _color-spin-change-handler (widget finger color-slot-idx new-value)
+    (setf (elt (getf *fingers-colors* finger) color-slot-idx) new-value)
+    (format t "~a: finger ~a color slot value ~a changed to ~a value~%" widget finger color-slot-idx new-value))
+
+(defun _delta-spin-change-handler (widget finger color-slot-idx new-value)
+    (setf (elt (getf *fingers-deltas* finger) color-slot-idx) new-value)
+    (format t "~a: finger ~a color slot value ~a changed to ~a value~%" widget finger color-slot-idx new-value))
+
 (defun run-nijiato ()
   (.print-log. "test: staring test~%")
   (let ((cap-thread (bt:make-thread #'capture-thread :name "capturer")))
@@ -464,21 +485,39 @@
 					:adjustment (make-instance 'adjustment
 							 :lower 0d0
 							 :upper 100d0
-							 :step-increment 1d0))))
+							 :step-increment 1d0)))
+            (thumb-r-spin (_make-color-spin "Thumb: Red"))
+            (thumb-g-spin (_make-color-spin "Thumb: Green"))
+            (thumb-b-spin (_make-color-spin "Thumb: Blue"))
+            (thumb-dr-spin (_make-delta-spin "Thumb Delta: Red"))
+            (thumb-dg-spin (_make-delta-spin "Thumb Delta: Green"))
+            (thumb-db-spin (_make-delta-spin "Thumb Delta: Blue")))
 
-    (.print-log. "test: connecting to value-changing handlers~%")
+        (.print-log. "test: connecting to value-changing handlers~%")
 	(gobject:connect-signal bright-spin "value-changed"
 	   (lambda (widget)
-	  (let ((value (adjustment-value (spin-button-adjustment bright-spin))))
-	       (format t "~A changed value to ~F~%" widget value)
+              (let ((value (adjustment-value (spin-button-adjustment bright-spin))))
+	          (format t "~A changed value to ~F~%" widget value)
 		  (unless (without-errors
-			  (format t "Previous value was: ~F~%"
-			    (v4l2:get-control *capture-fd* v4l2:cid-brightness))
-	     (v4l2:set-control *capture-fd* v4l2:cid-brightness (/ value 100)))
-	     (v4l2:set-control *capture-fd* v4l2:cid-exposure (/ value 100))))))
+		      (format t "Previous value was: ~F~%" (v4l2:get-control *capture-fd* v4l2:cid-brightness))
+                      (v4l2:set-control *capture-fd* v4l2:cid-brightness (/ value 100)))
+                      (v4l2:set-control *capture-fd* v4l2:cid-exposure   (/ value 100))))))
 
-    (.print-log. "test: connecting destorying handlers~%")
-    
+        (gobject:connect-signal thumb-r-spin "value-changed" 
+           (lambda (widget) (_color-spin-change-handler widget :thumb 0 (adjustment-value (spin-button-adjustment thumb-r-spin)))))
+        (gobject:connect-signal thumb-g-spin "value-changed"
+           (lambda (widget) (_color-spin-change-handler widget :thumb 1 (adjustment-value (spin-button-adjustment thumb-g-spin)))))
+        (gobject:connect-signal thumb-b-spin "value-changed"
+           (lambda (widget) (_color-spin-change-handler widget :thumb 2 (adjustment-value (spin-button-adjustment thumb-b-spin)))))
+
+        (gobject:connect-signal thumb-dr-spin "value-changed"
+           (lambda (widget) (_delta-spin-change-handler widget :thumb 0 (adjustment-value (spin-button-adjustment thumb-dr-spin)))))
+        (gobject:connect-signal thumb-dg-spin "value-changed"
+           (lambda (widget) (_delta-spin-change-handler widget :thumb 1 (adjustment-value (spin-button-adjustment thumb-dg-spin)))))
+        (gobject:connect-signal thumb-db-spin "value-changed"
+           (lambda (widget) (_delta-spin-change-handler widget :thumb 2 (adjustment-value (spin-button-adjustment thumb-db-spin)))))
+
+        (.print-log. "test: connecting destorying handlers~%")
 	(gobject:connect-signal quit-button "clicked"
 				(lambda (widget)
 				  (declare (ignore widget))
@@ -489,8 +528,8 @@
 				  (declare (ignore widget))
 				  (bt:condition-notify *render-thread-stop*)))
 
-;; Capture process needs to know which widget to ask for redraw
-    (.print-log. "test: attaching window source to camera~%")
+        ;; Capture process needs to know which widget to ask for redraw
+        (.print-log. "test: attaching window source to camera~%")
 	(setq *camera-widget* (make-instance 'gl-drawing-area
 					     :on-init #'camera-init
 					     :on-expose #'camera-draw))
@@ -498,11 +537,17 @@
 	(box-pack-start hbox *camera-widget* :expand t)
 	(box-pack-start vbox quit-button :expand nil)
 	(box-pack-start vbox bright-spin :expand nil)
+	(box-pack-start vbox thumb-r-spin :expand nil)
+	(box-pack-start vbox thumb-g-spin :expand nil)
+	(box-pack-start vbox thumb-b-spin :expand nil)
+	(box-pack-start vbox thumb-dr-spin :expand nil)
+        (box-pack-start vbox thumb-dg-spin :expand nil)
+        (box-pack-start vbox thumb-db-spin :expand nil)
 	(container-add window hbox)
 	(widget-show window :all t)))
 
     (.print-log. "test: running main capturing thread~%")
-;; Wait for window destruction
+    ;; Wait for window destruction
     (bt:with-lock-held (*render-thread-lock*)
       (bt:condition-wait *render-thread-stop* *render-thread-lock*))
     (setq *cap-thread-stop* t)
