@@ -455,17 +455,17 @@
 (defun _make-delta-spin (name)
     (make-instance 'spin-button :label name
                                 :adjustment (make-instance 'adjustment
-                                                           :lower 0.0
-                                                           :upper 1.0
-                                                           :step-increment 0.01)))
+                                                           :lower 0d0
+                                                           :upper 100d0
+                                                           :step-increment 1d0)))
 
 (defun _color-spin-change-handler (widget finger color-slot-idx new-value)
     (setf (elt (getf *fingers-colors* finger) color-slot-idx) new-value)
     (format t "~a: finger ~a color slot value ~a changed to ~a value~%" widget finger color-slot-idx new-value))
 
 (defun _delta-spin-change-handler (widget finger color-slot-idx new-value)
-    (setf (elt (getf *fingers-deltas* finger) color-slot-idx) new-value)
-    (format t "~a: finger ~a color slot value ~a changed to ~a value~%" widget finger color-slot-idx new-value))
+    (setf (elt (getf *fingers-deltas* finger) color-slot-idx) (/ new-value 100))
+    (format t "~a: finger ~a delta slot value ~a changed to ~a value~%" widget finger color-slot-idx (/ new-value 100)))
 
 (defun run-nijiato ()
   (.print-log. "test: staring test~%")
