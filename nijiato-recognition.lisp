@@ -51,31 +51,24 @@
 ;; Nijiato things
 ;; ==============
 
-;; fingers-deltas                              r   g   b
-#|
-(defvar *fingers-deltas* (list :thumb  (vector 0.02 0.01 0.01)
-                               :index  (vector 0.02 0.01 0.01)
+;; fingers-deltas                              r    g    b
+(defvar *fingers-deltas* (list :thumb  (vector 0.09 0.07 0.04)
+                               :index  (vector 0.06 0.04 0.03)
                                :middle (vector 0.02 0.02 0.01)
-                               :ring   (vector 0.01 0.02 0.01)
+                               :ring   (vector 0.04 0.05 0.05)
                                :little (vector 0.01 0.01 0.02)))
-|#
-(defvar *fingers-deltas* (list :thumb  (vector 0.2 0.1 0.1)
-                               :index  (vector 0.2 0.1 0.1)
-                               :middle (vector 0.2 0.2 0.1)
-                               :ring   (vector 0.1 0.2 0.1)
-                               :little (vector 0.1 0.1 0.2)))
 
 ;; fingers-colors:
-;; thumb red #f95f98 249:95:152 r > b, b > g; (b - g) ~ (r - b)
-;; index orange #fa9eaa 250:158:170 r > g, r > b; g ~ b;
+;; thumb red #77275a 119:39:90 r > b, b > g; (b - g) ~ (r - b)
+;; index orange #a36675 163:102:117 r > g, r > b; g ~ b;
 ;; middle yellow #faffc9 250:255:201 r ~ g; r > b, g > b; (r - b) ~ (g - b) 
-;; ring green #5b8b7d 91:139:125 g > r, g > b; r ~ b; (g - r) ~ (g - b)
+;; ring green #385658 56:86:88 g > r, g > b; r ~ b; (g - r) ~ (g - b)
 ;; little blue #5793c5 87:147:197 b > g > r; (b - g) ~ (g - b)
 ;;                                             r    g    b
-(defvar *fingers-colors* (list :thumb  (vector 0.98 0.37 0.60)
-                               :index  (vector 0.98 0.62 0.66)
+(defvar *fingers-colors* (list :thumb  (vector 0.47 0.15 0.35)
+                               :index  (vector 0.64 0.40 0.46)
                                :middle (vector 0.98 1.00 0.79)
-                               :ring   (vector 0.36 0.55 0.49)
+                               :ring   (vector 0.22 0.34 0.35)
                                :little (vector 0.34 0.58 0.77)))
 
 ;; shifts
@@ -463,7 +456,7 @@
 
 (defun _color-spin-change-handler (widget finger color-slot-idx new-value)
     (setf (elt (getf *fingers-colors* finger) color-slot-idx) (/ new-value 255))
-    (format t "~a: finger ~a color slot value ~a changed to ~a value~%" widget finger color-slot-idx new-value))
+    (format t "~a: finger ~a color slot value ~a changed to ~a value~%" widget finger color-slot-idx (/ new-value 255)))
 
 (defun _delta-spin-change-handler (widget finger color-slot-idx new-value)
     (setf (elt (getf *fingers-deltas* finger) color-slot-idx) (/ new-value 100))
@@ -488,12 +481,12 @@
 							 :lower 0d0
 							 :upper 100d0
 							 :step-increment 1d0)))
-            (thumb-r-spin (_make-color-spin "Thumb: Red" :thumb 0))
-            (thumb-g-spin (_make-color-spin "Thumb: Green" :thumb 1))
-            (thumb-b-spin (_make-color-spin "Thumb: Blue" :thumb 2))
-            (thumb-dr-spin (_make-delta-spin "Thumb Delta: Red" :thumb 0))
-            (thumb-dg-spin (_make-delta-spin "Thumb Delta: Green" :thumb 1))
-            (thumb-db-spin (_make-delta-spin "Thumb Delta: Blue" :thumb 2)))
+            (index-r-spin (_make-color-spin "index: Red" :index 0))
+            (index-g-spin (_make-color-spin "index: Green" :index 1))
+            (index-b-spin (_make-color-spin "index: Blue" :index 2))
+            (index-dr-spin (_make-delta-spin "index Delta: Red" :index 0))
+            (index-dg-spin (_make-delta-spin "index Delta: Green" :index 1))
+            (index-db-spin (_make-delta-spin "index Delta: Blue" :index 2)))
 
         (.print-log. "test: connecting to value-changing handlers~%")
 	(gobject:connect-signal bright-spin "value-changed"
@@ -505,19 +498,19 @@
                       (v4l2:set-control *capture-fd* v4l2:cid-brightness (/ value 100)))
                       (v4l2:set-control *capture-fd* v4l2:cid-exposure   (/ value 100))))))
 
-        (gobject:connect-signal thumb-r-spin "value-changed" 
-           (lambda (widget) (_color-spin-change-handler widget :thumb 0 (adjustment-value (spin-button-adjustment thumb-r-spin)))))
-        (gobject:connect-signal thumb-g-spin "value-changed"
-           (lambda (widget) (_color-spin-change-handler widget :thumb 1 (adjustment-value (spin-button-adjustment thumb-g-spin)))))
-        (gobject:connect-signal thumb-b-spin "value-changed"
-           (lambda (widget) (_color-spin-change-handler widget :thumb 2 (adjustment-value (spin-button-adjustment thumb-b-spin)))))
+        (gobject:connect-signal index-r-spin "value-changed" 
+           (lambda (widget) (_color-spin-change-handler widget :index 0 (adjustment-value (spin-button-adjustment index-r-spin)))))
+        (gobject:connect-signal index-g-spin "value-changed"
+           (lambda (widget) (_color-spin-change-handler widget :index 1 (adjustment-value (spin-button-adjustment index-g-spin)))))
+        (gobject:connect-signal index-b-spin "value-changed"
+           (lambda (widget) (_color-spin-change-handler widget :index 2 (adjustment-value (spin-button-adjustment index-b-spin)))))
 
-        (gobject:connect-signal thumb-dr-spin "value-changed"
-           (lambda (widget) (_delta-spin-change-handler widget :thumb 0 (adjustment-value (spin-button-adjustment thumb-dr-spin)))))
-        (gobject:connect-signal thumb-dg-spin "value-changed"
-           (lambda (widget) (_delta-spin-change-handler widget :thumb 1 (adjustment-value (spin-button-adjustment thumb-dg-spin)))))
-        (gobject:connect-signal thumb-db-spin "value-changed"
-           (lambda (widget) (_delta-spin-change-handler widget :thumb 2 (adjustment-value (spin-button-adjustment thumb-db-spin)))))
+        (gobject:connect-signal index-dr-spin "value-changed"
+           (lambda (widget) (_delta-spin-change-handler widget :index 0 (adjustment-value (spin-button-adjustment index-dr-spin)))))
+        (gobject:connect-signal index-dg-spin "value-changed"
+           (lambda (widget) (_delta-spin-change-handler widget :index 1 (adjustment-value (spin-button-adjustment index-dg-spin)))))
+        (gobject:connect-signal index-db-spin "value-changed"
+           (lambda (widget) (_delta-spin-change-handler widget :index 2 (adjustment-value (spin-button-adjustment index-db-spin)))))
 
         (.print-log. "test: connecting destorying handlers~%")
 	(gobject:connect-signal quit-button "clicked"
@@ -539,12 +532,12 @@
 	(box-pack-start hbox *camera-widget* :expand t)
 	(box-pack-start vbox quit-button :expand nil)
 	(box-pack-start vbox bright-spin :expand nil)
-	(box-pack-start vbox thumb-r-spin :expand nil)
-	(box-pack-start vbox thumb-g-spin :expand nil)
-	(box-pack-start vbox thumb-b-spin :expand nil)
-	(box-pack-start vbox thumb-dr-spin :expand nil)
-        (box-pack-start vbox thumb-dg-spin :expand nil)
-        (box-pack-start vbox thumb-db-spin :expand nil)
+	(box-pack-start vbox index-r-spin :expand nil)
+	(box-pack-start vbox index-g-spin :expand nil)
+	(box-pack-start vbox index-b-spin :expand nil)
+	(box-pack-start vbox index-dr-spin :expand nil)
+    (box-pack-start vbox index-dg-spin :expand nil)
+    (box-pack-start vbox index-db-spin :expand nil)
 	(container-add window hbox)
 	(widget-show window :all t)))
 
