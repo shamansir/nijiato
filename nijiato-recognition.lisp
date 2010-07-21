@@ -54,22 +54,22 @@
 ;; fingers-deltas                              r    g    b
 (defvar *fingers-deltas* (list :thumb  (vector 0.09 0.07 0.04)
                                :index  (vector 0.04 0.05 0.05)
-                               :middle (vector 0.02 0.02 0.01)
-                               :ring   (vector 0.04 0.05 0.05)
-                               :little (vector 0.01 0.01 0.02)))
+                               :middle (vector 0.07 0.06 0.06)
+                               :ring   (vector 0.05 0.06 0.06)
+                               :little (vector 0.08 0.07 0.07)))
 
 ;; fingers-colors:
 ;; thumb red #77275a 119:39:90 r > b, b > g; (b - g) ~ (r - b)
 ;; index orange #a36675 163:102:117 r > g, r > b; g ~ b;
-;; middle yellow #faffc9 250:255:201 r ~ g; r > b, g > b; (r - b) ~ (g - b) 
-;; ring green #385658 56:86:88 g > r, g > b; r ~ b; (g - r) ~ (g - b)
-;; little blue #5793c5 87:147:197 b > g > r; (b - g) ~ (g - b)
+;; middle yellow #949c6d 148:156:109 r ~ g; r > b, g > b; (r - b) ~ (g - b) 
+;; ring green #1d585a 29:88:90 g > r, g > b; r ~ b; (g - r) ~ (g - b)
+;; little blue #15599b 21:89:155 b > g > r; (b - g) ~ (g - b)
 ;;                                             r    g    b
 (defvar *fingers-colors* (list :thumb  (vector 0.47 0.15 0.35)
                                :index  (vector 0.64 0.40 0.46)
-                               :middle (vector 0.98 1.00 0.79)
-                               :ring   (vector 0.22 0.34 0.35)
-                               :little (vector 0.34 0.58 0.77)))
+                               :middle (vector 0.58 0.61 0.43)
+                               :ring   (vector 0.11 0.34 0.35)
+                               :little (vector 0.08 0.35 0.61)))
 
 ;; shifts
 (defvar *fingers-shifts* (list :thumb  0
@@ -481,12 +481,12 @@
 							 :lower 0d0
 							 :upper 100d0
 							 :step-increment 1d0)))
-            (index-r-spin (_make-color-spin "index: Red" :index 0))
-            (index-g-spin (_make-color-spin "index: Green" :index 1))
-            (index-b-spin (_make-color-spin "index: Blue" :index 2))
-            (index-dr-spin (_make-delta-spin "index Delta: Red" :index 0))
-            (index-dg-spin (_make-delta-spin "index Delta: Green" :index 1))
-            (index-db-spin (_make-delta-spin "index Delta: Blue" :index 2)))
+            (ring-r-spin (_make-color-spin "ring: Red" :ring 0))
+            (ring-g-spin (_make-color-spin "ring: Green" :ring 1))
+            (ring-b-spin (_make-color-spin "ring: Blue" :ring 2))
+            (ring-dr-spin (_make-delta-spin "ring Delta: Red" :ring 0))
+            (ring-dg-spin (_make-delta-spin "ring Delta: Green" :ring 1))
+            (ring-db-spin (_make-delta-spin "ring Delta: Blue" :ring 2)))
 
         (.print-log. "test: connecting to value-changing handlers~%")
 	(gobject:connect-signal bright-spin "value-changed"
@@ -498,19 +498,19 @@
                       (v4l2:set-control *capture-fd* v4l2:cid-brightness (/ value 100)))
                       (v4l2:set-control *capture-fd* v4l2:cid-exposure   (/ value 100))))))
 
-        (gobject:connect-signal index-r-spin "value-changed" 
-           (lambda (widget) (_color-spin-change-handler widget :index 0 (adjustment-value (spin-button-adjustment index-r-spin)))))
-        (gobject:connect-signal index-g-spin "value-changed"
-           (lambda (widget) (_color-spin-change-handler widget :index 1 (adjustment-value (spin-button-adjustment index-g-spin)))))
-        (gobject:connect-signal index-b-spin "value-changed"
-           (lambda (widget) (_color-spin-change-handler widget :index 2 (adjustment-value (spin-button-adjustment index-b-spin)))))
+        (gobject:connect-signal ring-r-spin "value-changed" 
+           (lambda (widget) (_color-spin-change-handler widget :ring 0 (adjustment-value (spin-button-adjustment ring-r-spin)))))
+        (gobject:connect-signal ring-g-spin "value-changed"
+           (lambda (widget) (_color-spin-change-handler widget :ring 1 (adjustment-value (spin-button-adjustment ring-g-spin)))))
+        (gobject:connect-signal ring-b-spin "value-changed"
+           (lambda (widget) (_color-spin-change-handler widget :ring 2 (adjustment-value (spin-button-adjustment ring-b-spin)))))
 
-        (gobject:connect-signal index-dr-spin "value-changed"
-           (lambda (widget) (_delta-spin-change-handler widget :index 0 (adjustment-value (spin-button-adjustment index-dr-spin)))))
-        (gobject:connect-signal index-dg-spin "value-changed"
-           (lambda (widget) (_delta-spin-change-handler widget :index 1 (adjustment-value (spin-button-adjustment index-dg-spin)))))
-        (gobject:connect-signal index-db-spin "value-changed"
-           (lambda (widget) (_delta-spin-change-handler widget :index 2 (adjustment-value (spin-button-adjustment index-db-spin)))))
+        (gobject:connect-signal ring-dr-spin "value-changed"
+           (lambda (widget) (_delta-spin-change-handler widget :ring 0 (adjustment-value (spin-button-adjustment ring-dr-spin)))))
+        (gobject:connect-signal ring-dg-spin "value-changed"
+           (lambda (widget) (_delta-spin-change-handler widget :ring 1 (adjustment-value (spin-button-adjustment ring-dg-spin)))))
+        (gobject:connect-signal ring-db-spin "value-changed"
+           (lambda (widget) (_delta-spin-change-handler widget :ring 2 (adjustment-value (spin-button-adjustment ring-db-spin)))))
 
         (.print-log. "test: connecting destorying handlers~%")
 	(gobject:connect-signal quit-button "clicked"
@@ -532,12 +532,12 @@
 	(box-pack-start hbox *camera-widget* :expand t)
 	(box-pack-start vbox quit-button :expand nil)
 	(box-pack-start vbox bright-spin :expand nil)
-	(box-pack-start vbox index-r-spin :expand nil)
-	(box-pack-start vbox index-g-spin :expand nil)
-	(box-pack-start vbox index-b-spin :expand nil)
-	(box-pack-start vbox index-dr-spin :expand nil)
-    (box-pack-start vbox index-dg-spin :expand nil)
-    (box-pack-start vbox index-db-spin :expand nil)
+	(box-pack-start vbox ring-r-spin :expand nil)
+	(box-pack-start vbox ring-g-spin :expand nil)
+	(box-pack-start vbox ring-b-spin :expand nil)
+	(box-pack-start vbox ring-dr-spin :expand nil)
+    (box-pack-start vbox ring-dg-spin :expand nil)
+    (box-pack-start vbox ring-db-spin :expand nil)
 	(container-add window hbox)
 	(widget-show window :all t)))
 
