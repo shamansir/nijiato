@@ -194,19 +194,19 @@
                             (g (cffi:mem-aref address :uchar (+ (* 3 i) 1)))
                             (b (cffi:mem-aref address :uchar (+ (* 3 i) 2))))
                             
-           (when make-pixel (let ((pixel-result (funcall make-pixel i r g b))
+           (when make-pixel (let ((pixel-result (funcall make-pixel i r g b)))
                (setf (aref *camera-data* (+ (* 4 i) 0)) (elt pixel-result 0)
                      (aref *camera-data* (+ (* 4 i) 1)) (elt pixel-result 1)
-                     (aref *camera-data* (+ (* 4 i) 2)) (elt pixel-result 2))))
+                     (aref *camera-data* (+ (* 4 i) 2)) (elt pixel-result 2)))
                (setf (aref *camera-data* (+ (* 4 i) 0)) r
                      (aref *camera-data* (+ (* 4 i) 1)) g
-                     (aref *camera-data* (+ (* 4 i) 2)) b)))))))
+                     (aref *camera-data* (+ (* 4 i) 2)) b))))))
 
 	     (when *camera-widget*
 	       (with-main-loop
 		   (widget-queue-draw *camera-widget*)))
 
-	     (v4l2:put-frame fd frame)))	; put frame back to driver
+	     (v4l2:put-frame fd frame))))	; put frame back to driver
     (video-uninit fd buffers))
   (.print-log. "capture-thread: capturing thread exit~%"))
 
