@@ -165,14 +165,14 @@
 
 ;; => capture-thread
 
-(defun capture-thread (&key before-run every-frame make-pixel)
+(defun capture-thread (&key before-run every-frame switch-pixel)
   (.print-log. "capture-thread: capturing thread start~%")
   (multiple-value-bind (fd buffers)
     (video-init *capture-device*)
     
     (when before-run (funcall before-run *got-width* *got-height*))
 
-    (setf frame-num 0)
+    (defvar frame-num 0)
     (.print-log. "capture-thread: returned after init~%")
     (loop thereis *cap-thread-stop* do
       ; get one frame from driver
@@ -183,7 +183,7 @@
 	                          (declare (ignore buffer))
 	                          (setf frame-num (1+ frame-num))
 	                          
-	     (when every-frame (funcall every-frame frame-num))                     
+	     (when every-frame (funcall every-frame frame-num))
 	                          
 	     ;; (%send-out "~d~%" frame-num)
 	     ;; Silly rgb24->rgb32 converter
@@ -194,10 +194,11 @@
                             (g (cffi:mem-aref address :uchar (+ (* 3 i) 1)))
                             (b (cffi:mem-aref address :uchar (+ (* 3 i) 2))))
                             
-           (when make-pixel (let ((pixel-result (funcall make-pixel i r g b)))
-               (setf (aref *camera-data* (+ (* 4 i) 0)) (elt pixel-result 0)
-                     (aref *camera-data* (+ (* 4 i) 1)) (elt pixel-result 1)
-                     (aref *camera-data* (+ (* 4 i) 2)) (elt pixel-result 2)))
+           (if switch-pixel 
+               (let ((pixel-result (funcall switch-pixel i r g b))) ; use multiple-value-bind
+                   (setf (aref *camera-data* (+ (* 4 i) 0)) (elt pixel-result 0)
+                         (aref *camera-data* (+ (* 4 i) 1)) (elt pixel-result 1)
+                         (aref *camera-data* (+ (* 4 i) 2)) (elt pixel-result 2)))
                (setf (aref *camera-data* (+ (* 4 i) 0)) r
                      (aref *camera-data* (+ (* 4 i) 1)) g
                      (aref *camera-data* (+ (* 4 i) 2)) b))))))
@@ -259,7 +260,7 @@
 ;; => camera-draw
 
 (defun camera-draw (widget event)
-  (declare (ignore widget event))
+  (declare (ignore event))
   (gl:clear :color-buffer-bit :depth-buffer-bit)
   (gl:bind-texture :texture-rectangle-arb 0)
 
@@ -303,13 +304,14 @@
 
 ;; => run-demo
 
-(defun run-demo (&key before-run every-frame make-pixel)
+(defun run-demo (&key before-run every-frame switch-pixel)
   (.print-log. "test: staring test~%")
   (let ((cap-thread 
-           (bt:make-thread (lambda () (capture-thread 
-                                       :before-run before-run
-                                       :every-frame every-frame
-                                       :make-pixel make-pixel)) :name "capturer")))
+           (bt:make-thread #'(lambda () (funcall #'capture-thread 
+                                         :before-run before-run
+                                         :every-frame every-frame
+                                         :switch-pixel switch-pixel)) :name "capturer")))
+;  (let ((cap-thread (bt:make-thread #'capture-thread :name "capturer")))                          
     (with-main-loop
       (.print-log. "test: creating gtk window objects~%")
       (let ((window (make-instance 'gtk-window

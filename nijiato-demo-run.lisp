@@ -23,8 +23,8 @@
     (format t "~a: finger ~a delta slot value ~a changed to ~a value~%" widget finger color-slot-idx (/ new-value 100)))
 |#
 
-(defun before-run (width height)
-    (setq *fingers-values* (make-array (* *got-width* *got-height*)
+(defun before-run (win-width win-height)
+    (setq *fingers-values* (make-array (* win-width win-height)
                            :element-type '(unsigned-byte 8)
                            :initial-element 0)))
 
