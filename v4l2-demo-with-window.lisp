@@ -170,10 +170,10 @@
   (multiple-value-bind (fd buffers)
     (video-init *capture-device*)
     
+    (.print-log. "capture-thread: returned after init~%")    
     (when before-run (funcall before-run *got-width* *got-height*))
 
-    (defvar frame-num 0)
-    (.print-log. "capture-thread: returned after init~%")
+    (let ((frame-num 0))
     (loop thereis *cap-thread-stop* do
       ; get one frame from driver
 	  (let ((frame (without-errors (v4l2:get-frame fd))))
@@ -195,7 +195,7 @@
                             (b (cffi:mem-aref address :uchar (+ (* 3 i) 2))))
                             
            (if switch-pixel 
-               (let ((pixel-result (funcall switch-pixel i r g b))) ; use multiple-value-bind
+               (let ((pixel-result (funcall switch-pixel i r g b)))
                    (setf (aref *camera-data* (+ (* 4 i) 0)) (elt pixel-result 0)
                          (aref *camera-data* (+ (* 4 i) 1)) (elt pixel-result 1)
                          (aref *camera-data* (+ (* 4 i) 2)) (elt pixel-result 2)))
@@ -207,7 +207,7 @@
 	       (with-main-loop
 		   (widget-queue-draw *camera-widget*)))
 
-	     (v4l2:put-frame fd frame))))	; put frame back to driver
+	     (v4l2:put-frame fd frame)))))	; put frame back to driver
     (video-uninit fd buffers))
   (.print-log. "capture-thread: capturing thread exit~%"))
 
