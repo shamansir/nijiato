@@ -13,7 +13,9 @@
 (asdf:oos 'asdf:load-op :bordeaux-threads)
 
 (defpackage :cl-v4l2-demo
-  (:use :common-lisp :gtk :gtkglext))
+  (:nicknames :v4l2demo)
+  (:use :common-lisp :gtk :gtkglext)
+  (:export #:run-demo))
 
 (in-package :cl-v4l2-demo)
 
@@ -368,5 +370,3 @@
       (bt:condition-wait *render-thread-stop* *render-thread-lock*))
     (setq *cap-thread-stop* t)
     (bt:join-thread cap-thread)))
-
-(run-demo)
