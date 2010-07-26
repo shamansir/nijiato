@@ -100,6 +100,11 @@
 ;;; ================================================================ Functions >
 ;;; ----------------------------------------------------------------------------
 
+(defun init-fingers-values (win-width win-height)
+    (setq *fingers-values* (make-array (* win-width win-height)
+                           :element-type '(unsigned-byte 8)
+                           :initial-element 0)))
+
 ;; returns 00-99 value for (un)detected finger states for concrete pixel to 
 ;; put it in *colors-values* array
 
@@ -139,3 +144,13 @@
   ) (vector 0 0 0))
 
 (defun color-from-finger-value (value) (_cffv value))
+
+(defun visualize-value (pos r g b)
+    (setf (aref *fingers-values* pos) (get-finger-value (/ r 255) (/ g 255) (/ b 255)))
+
+    (if (= (elt *fingers-values* pos) 0)
+        (let ((result (vector 0 0 0)))
+             (setf (elt result 0) r
+                   (elt result 1) g
+                   (elt result 2) b) result)
+		(color-from-finger-value (elt *fingers-values* pos))))

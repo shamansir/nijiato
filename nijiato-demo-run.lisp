@@ -26,24 +26,7 @@
 (in-package :nijiato-recognition)
 
 (use-package :cl-v4l2-demo)
-
-(defun on-start (win-width win-height)
-    (setq *fingers-values* (make-array (* win-width win-height)
-                           :element-type '(unsigned-byte 8)
-                           :initial-element 0)))
-
-(defun on-frame (frame-num) (%send-out "~d" frame-num))
-
-(defun use-and-get-pixel (i r g b)
-    (setf (aref *fingers-values* i) (get-finger-value (/ r 255) (/ g 255) (/ b 255)))
-
-    (if (= (elt *fingers-values* i) 0)
-        (let ((result (vector 0 0 0)))
-             (setf (elt result 0) r
-                   (elt result 1) g
-                   (elt result 2) b) result)
-		(color-from-finger-value (elt *fingers-values* i))))
 		
-(v4l2demo:run-demo :before-run #'on-start
-                   :every-frame #'on-frame
-                   :switch-pixel nil)
+(v4l2demo:run-demo :before-run #'init-fingers-values
+                   :every-frame nil
+                   :switch-pixel #'visualize-value)
