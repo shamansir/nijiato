@@ -27,12 +27,12 @@
 
 (use-package :cl-v4l2-demo)
 
-(defun before-run (win-width win-height)
+(defun on-start (win-width win-height)
     (setq *fingers-values* (make-array (* win-width win-height)
                            :element-type '(unsigned-byte 8)
                            :initial-element 0)))
 
-(defun every-frame (frame-num) (%send-out frame-num))
+(defun on-frame (frame-num) (%send-out "~d" frame-num))
 
 (defun use-and-get-pixel (i r g b)
     (setf (aref *fingers-values* i) (get-finger-value (/ r 255) (/ g 255) (/ b 255)))
@@ -44,6 +44,6 @@
                    (elt result 2) b) result)
 		(color-from-finger-value (elt *fingers-values* i))))
 		
-(v4l2demo:run-demo v4l2demo:before-run before-run
-                   v4l2demo:every-frame every-frame
-                   v4l2demo:switch-pixel nil)
+(v4l2demo:run-demo :before-run #'on-start
+                   :every-frame #'on-frame
+                   :switch-pixel nil)

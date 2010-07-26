@@ -15,7 +15,10 @@
 (defpackage :cl-v4l2-demo
   (:nicknames :v4l2demo)
   (:use :common-lisp :gtk :gtkglext)
-  (:export #:run-demo))
+  (:export #:run-demo
+           #:before-run
+           #:every-frame
+           #:switch-pixel))
 
 (in-package :cl-v4l2-demo)
 
