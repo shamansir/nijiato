@@ -110,14 +110,14 @@
 
 (defun get-finger-value (r g b)
   (.plist/map. *fingers-colors* 
-     (lambda (finger-name required-colors) 
+     (lambda (finger-name required-colors)
         (let* ((deltas (getf *fingers-deltas* finger-name))
                (rr (elt required-colors 0))
                (gg (elt required-colors 1))
                (bb (elt required-colors 2))
                (dr (elt deltas 0))
-	       (dg (elt deltas 1))
-	       (db (elt deltas 2)))
+	           (dg (elt deltas 1))
+	           (db (elt deltas 2)))
 	   ; (format t "~a got: ~a required: ~a~% deltas: ~a~%" finger-name (list r g b) required-colors deltas)
 	   (if (and 
              (plusp  (+ (- r rr) dr))
@@ -129,21 +129,20 @@
              (return-from get-finger-value (+ 9 (getf *fingers-shifts* finger-name)))))))
   0)
 
-(defun _cffv (value)
-  (cond ((= value 0)   (return-from _cffv (vector 0 0 0)))
-        ((< value 10)  (return-from _cffv (vector 255 0   50 ))) ; r-thumb  / red
-        ((< value 20)  (return-from _cffv (vector 255 100 100))) ; r-index  / orange
-        ((< value 30)  (return-from _cffv (vector 255 255 100))) ; r-middle / yellow
-        ((< value 40)  (return-from _cffv (vector 0   255 0  ))) ; r-ring   / green
-        ((< value 50)  (return-from _cffv (vector 0   0   255))) ; r-little / blue
-        ((< value 60)  (return-from _cffv (vector 255 0   50 ))) ; l-thumb  / red
-        ((< value 70)  (return-from _cffv (vector 255 100 100))) ; l-index  / orange
-        ((< value 80)  (return-from _cffv (vector 255 255 100))) ; l-middle / yellow
-        ((< value 90)  (return-from _cffv (vector 0   255 0  ))) ; l-ring   / green
-        ((< value 100) (return-from _cffv (vector 0   0   255))) ; l-little / blue
-  ) (vector 0 0 0))
-
-(defun color-from-finger-value (value) (_cffv value))
+(defun color-from-finger-value (value)
+  (cond ((= value 0)   (vector 0   0   0  ))
+        ((< value 10)  (vector 255 0   50 )) ; r-thumb  / red
+        ((< value 20)  (vector 255 100 100)) ; r-index  / orange
+        ((< value 30)  (vector 255 255 100)) ; r-middle / yellow
+        ((< value 40)  (vector 0   255 0  )) ; r-ring   / green
+        ((< value 50)  (vector 0   0   255)) ; r-little / blue
+        ((< value 60)  (vector 255 0   50 )) ; l-thumb  / red
+        ((< value 70)  (vector 255 100 100)) ; l-index  / orange
+        ((< value 80)  (vector 255 255 100)) ; l-middle / yellow
+        ((< value 90)  (vector 0   255 0  )) ; l-ring   / green
+        ((< value 100) (vector 0   0   255)) ; l-little / blue
+        (t             (vector 0   0   0  ))
+  ))
 
 (defun visualize-value (pos r g b)
     (setf (aref *fingers-values* pos) (get-finger-value (/ r 255) (/ g 255) (/ b 255)))
