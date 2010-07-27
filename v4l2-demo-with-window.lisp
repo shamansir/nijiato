@@ -213,6 +213,7 @@
 		   (widget-queue-draw *camera-widget*)))
 
 	     (v4l2:put-frame fd frame)))))	; put frame back to driver
+	     
     (video-uninit fd buffers))
   (.print-log. "capture-thread: capturing thread exit~%"))
 

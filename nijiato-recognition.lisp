@@ -90,7 +90,7 @@
     `(loop for (,key-name ,value-name . nil) on ,plist by #'cddr do 
                           (funcall (,@func) ,key-name ,value-name))))
 
-;; Usage: (.plist/map. (list :a 2 :b 3 :c 4) (lambda (k v l) (format t "~a~%" (list k v l)))
+;; Usage: (.plist/map-inline. (list :a 2 :b 3 :c 4) (lambda (k v l) (format t "~a~%" (list k v l)))
 (defmacro .plist/map-inline. (plist func) 
   (let ((key-name (gensym)) 
         (value-name (gensym))) 
@@ -111,7 +111,7 @@
 (defun get-finger-value (r g b)
   (.plist/map. *fingers-colors* 
      (lambda (finger-name required-colors)
-        (let* ((deltas (getf *fingers-deltas* finger-name))
+        (let* ((deltas (getf *fingers-deltas* finger-name)) 
                (rr (elt required-colors 0))
                (gg (elt required-colors 1))
                (bb (elt required-colors 2))
@@ -143,6 +143,10 @@
         ((< value 100) (vector 0   0   255)) ; l-little / blue
         (t             (vector 0   0   0  ))
   ))
+  
+(defun detect-fingers-positions (width height)
+  (loop for x from 0 to (1- width)) do
+     (loop for y from 0 to (1- height) do ()))
 
 (defun visualize-value (pos r g b)
     (setf (aref *fingers-values* pos) (get-finger-value (/ r 255) (/ g 255) (/ b 255)))
