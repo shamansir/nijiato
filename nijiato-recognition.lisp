@@ -71,6 +71,15 @@
 ;; 90-99 for l-little
 (defparameter *fingers-values* nil)
 
+;;; ========================================================= Inner Parameters >
+;;; ----------------------------------------------------------------------------
+
+(defvar *error-tolerance* 4) ; how many pixels in the line can be skipped when
+                             ; determining finger angle
+                             
+(defvar *finger-window-side* 15) ; pixels-length of the line of same color when                           
+                                 ; decision that it is a finger is made
+
 ;;; ============================================================ Special Macro >
 ;;; ----------------------------------------------------------------------------
 
@@ -144,9 +153,21 @@
         (t             (vector 0   0   0  ))
   ))
   
+(defun coords-for-angle (angle)
+  (let ((coords (list)))
+     (if (or (and (> angle (/      pi  4)) (< angle (/ (* 3 pi) 4)))  ;  45 < angle < 135
+             (and (> angle (/ (* 5 pi) 4)) (< angle (/ (* 7 pi) 4)))) ; 225 < angle < 315
+         (loop for y from (* -1 *finger-window-side*) to *finger-window-size* do (setf coords (append coords (list (round (* (cos angle) y)) y))))
+         (loop for x from (* -1 *finger-window-side*) to *finger-window-size* do (setf coords (append coords (list x (round (* (sin angle) x)))))))
+     coords))
+  
 (defun detect-fingers-positions (width height)
-  (loop for x from 0 to (1- width)) do
-     (loop for y from 0 to (1- height) do ()))
+  (loop for y from 0 to (1- height) do
+     (loop for x from 0 to (1- width) do 
+        (let* ((cur-pos (+ (* width y) x))
+               (val (elt *fingers-values* cur-pos))
+            (when (> val 0) 
+                ()))))))
 
 (defun visualize-value (pos r g b)
     (setf (aref *fingers-values* pos) (get-finger-value (/ r 255) (/ g 255) (/ b 255)))
