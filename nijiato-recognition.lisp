@@ -74,11 +74,16 @@
 ;;; ========================================================= Inner Parameters >
 ;;; ----------------------------------------------------------------------------
 
+(defvar *finger-box-side* 15) ; pixels-length of the line of same color when                           
+                                 ; decision that it is a finger is made
+                                 
+(defvar *box-angle-step* (/ pi 20)) ; step between angles in a box where searching
+                                    ; for such lines is made
+
 (defvar *error-tolerance* 4) ; how many pixels in the line can be skipped when
                              ; determining finger angle
                              
-(defvar *finger-window-side* 15) ; pixels-length of the line of same color when                           
-                                 ; decision that it is a finger is made
+(defvar *hits-pass* (- (1+ (* 2 *finger-box-size*)) *error-tolerance*))
 
 ;;; ============================================================ Special Macro >
 ;;; ----------------------------------------------------------------------------
@@ -153,21 +158,76 @@
         (t             (vector 0   0   0  ))
   ))
   
+(defun finger-from-value (value)
+  (cond ((= value 0)   nil)
+        ((< value 10)  :thumb ) ; r-thumb  / red
+        ((< value 20)  :index ) ; r-index  / orange
+        ((< value 30)  :middle) ; r-middle / yellow
+        ((< value 40)  :ring  ) ; r-ring   / green
+        ((< value 50)  :little) ; r-little / blue
+        ((< value 60)  :thumb ) ; l-thumb  / red
+        ((< value 70)  :index ) ; l-index  / orange
+        ((< value 80)  :middle) ; l-middle / yellow
+        ((< value 90)  :ring  ) ; l-ring   / green
+        ((< value 100) :little) ; l-little / blue
+        (t             nil)
+  ))  
+  
+  
+;; takes an angle in radians (practically between 0 and pi) and translates it 
+;; into the array of (x y) coordinates pairs of pixels that 'draw' the line
+;; representation of this angle in the square box with side equal to 
+;; (*finger-box-side* + 1). coordinates values may vary from (-1 * *finger-box-side*) 
+;; to *finger-box-side* and the center is (0 0)
+  
 (defun coords-for-angle (angle)
-  (let ((coords (list)))
+  (let ((coords (make-array (1+ (* *finger-box-side* 2)) :fill-pointer 0)))
      (if (or (and (> angle (/      pi  4)) (< angle (/ (* 3 pi) 4)))  ;  45 < angle < 135
              (and (> angle (/ (* 5 pi) 4)) (< angle (/ (* 7 pi) 4)))) ; 225 < angle < 315
-         (loop for y from (* -1 *finger-window-side*) to *finger-window-size* do (setf coords (append coords (list (round (* (cos angle) y)) y))))
-         (loop for x from (* -1 *finger-window-side*) to *finger-window-size* do (setf coords (append coords (list x (round (* (sin angle) x)))))))
+         (loop for y from (* -1 *finger-box-side*) to *finger-box-side* do 
+                       (vector-push (list (round (* (cos angle) y)) y) coords))
+         (loop for x from (* -1 *finger-box-side*) to *finger-box-side* do 
+                       (vector-push (list x (round (* (sin angle) x))) coords)))
      coords))
+     
+;; replaces concrete elements in *finges-values* array with values more 
+;; than 100 to show where finger may be located. in fact, it checks the previous
+;; value to be greater than zero, and if it is so, tries to find a line of same values
+;; inside the box with side of *finger-box-side* around this point (see 'coords-for-angle')
+;; using angles between 0 and pi with step *box-angle-step* and allowed error of missing
+;; *error-tolerance* pixels
   
 (defun detect-fingers-positions (width height)
   (loop for y from 0 to (1- height) do
      (loop for x from 0 to (1- width) do 
         (let* ((cur-pos (+ (* width y) x))
-               (val (elt *fingers-values* cur-pos))
-            (when (> val 0) 
-                ()))))))
+               (val (elt *fingers-values* cur-pos)))
+            (when (and (> val 0) (< val 100))
+                  ;; from 0 to pi with step *box-angle-step*
+                  (do ((angle 0 (+ angle *box-angle-step*))) ((> angle pi)) 
+                      (let ((coords (coords-for-angle angle))
+                            (hit-num 0))
+                           (loop for point across coords do 
+                              (let* ((in-x (+ (car point) x))
+                                     (in-y (+ (cdr (car point) y)))
+                                     (in-pos (+ (* width in-y) in-x)))
+                                    (when (>= in-pos 0)
+                                          (let ((in-val (elt *fingers-values* in-pos)))
+                                               (when (and (> in-val 0)
+                                                          (< in-val 100))
+                                                     (if (= in-val val)
+                                                         (incf hit-num)))))))
+                           (when (>= hit-num *hits-pass*)
+                              (loop for point across coords do 
+                                 (let* ((in-x (+ (car point) x))
+                                        (in-y (+ (cdr (car point) y)))
+                                        (in-pos (+ (* width in-y) in-x)))
+                                     (setf (elt *finger-values* in-pos) (+ in-val 100))))))))))))
+                                                         
+                
+;; takes a pixel RGB components and calculates new RGB components to show in UI
+;; as 'may-be-a-finger' pixel, if this finger is recognized there, stores value
+;; in *fingers-values* array in 'pos' position
 
 (defun visualize-value (pos r g b)
     (setf (aref *fingers-values* pos) (get-finger-value (/ r 255) (/ g 255) (/ b 255)))
