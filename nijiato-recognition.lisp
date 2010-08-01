@@ -198,11 +198,13 @@
 ;; *error-tolerance* pixels
   
 (defun detect-fingers-positions (width height)
+  (let ((hits (make-array 10 :initial-element nil)))
   (loop for y from 0 to (1- height) do
      (loop for x from 0 to (1- width) do 
         (let* ((cur-pos (+ (* width y) x))
                (val (elt *fingers-values* cur-pos)))
-            (when (and (> val 0) (< val 100))
+            ;; if all fingers were hit -> break here               
+            (when (and (> val 0) (< val 100) (not (elt hits (/ val 10))))
                   ;; from 0 to pi with step *box-angle-step*
                   (do ((angle 0 (+ angle *box-angle-step*))) ((> angle pi)) 
                       (let ((coords (coords-for-angle angle))
@@ -218,11 +220,12 @@
                                                      (if (= in-val val)
                                                          (incf hit-num)))))))
                            (when (>= hit-num *hits-pass*)
+                              (setf (elt hits (/ val 10)) t)
                               (loop for point across coords do 
                                  (let* ((in-x (+ (car point) x))
                                         (in-y (+ (cdr (car point) y)))
                                         (in-pos (+ (* width in-y) in-x)))
-                                     (setf (elt *finger-values* in-pos) (+ in-val 100))))))))))))
+                                     (setf (elt *finger-values* in-pos) (+ val 100))))))))))))
                                                          
                 
 ;; takes a pixel RGB components and calculates new RGB components to show in UI
