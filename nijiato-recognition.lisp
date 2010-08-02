@@ -74,8 +74,11 @@
 ;;; ========================================================= Inner Parameters >
 ;;; ----------------------------------------------------------------------------
 
-(defvar *finger-box-side* 15) ; pixels-length of the line of same color when                           
-                                 ; decision that it is a finger is made
+(defvar *finger-box-side-half* 15) ; half of the pixels-length of the line of 
+                                   ; same color when decision that it is a finger is made
+                                   ; so when 31 pixels is the length than required,
+                                   ; set this var to 15, so the box side will be from
+                                   ; -15 to 15, including 0 and both ends
                                  
 (defvar *box-angle-step* (/ pi 20)) ; step between angles in a box where searching
                                     ; for such lines is made
@@ -83,7 +86,7 @@
 (defvar *error-tolerance* 4) ; how many pixels in the line can be skipped when
                              ; determining finger angle
                              
-(defvar *hits-pass* (- (1+ (* 2 *finger-box-size*)) *error-tolerance*))
+(defvar *hits-pass* (- (1+ (* 2 *finger-box-side-half*)) *error-tolerance*))
 
 ;;; ============================================================ Special Macro >
 ;;; ----------------------------------------------------------------------------
@@ -114,10 +117,17 @@
 ;;; ================================================================ Functions >
 ;;; ----------------------------------------------------------------------------
 
-(defun init-fingers-values (win-width win-height)
-    (setq *fingers-values* (make-array (* win-width win-height)
+(defun init-fingers-values (width height)
+    (setq *fingers-values* (make-array (* width height)
                            :element-type '(unsigned-byte 8)
                            :initial-element 0)))
+                           
+(defun print-fingers-values (width height)
+   (loop for y from 0 to (1- height) do
+     (loop for x from 0 to (1- width) do 
+        (let* ((cur-pos (+ (* width y) x))
+               (val (elt *fingers-values* cur-pos)))
+               (format t "~d ~d (~d): ~d~%" x y cur-pos val)))))
 
 ;; returns 00-99 value for (un)detected finger states for concrete pixel to 
 ;; put it in *colors-values* array
@@ -181,12 +191,12 @@
 ;; to *finger-box-side* and the center is (0 0)
   
 (defun coords-for-angle (angle)
-  (let ((coords (make-array (1+ (* *finger-box-side* 2)) :fill-pointer 0)))
+  (let ((coords (make-array (1+ (* *finger-box-side-half* 2)) :fill-pointer 0)))
      (if (or (and (> angle (/      pi  4)) (< angle (/ (* 3 pi) 4)))  ;  45 < angle < 135
              (and (> angle (/ (* 5 pi) 4)) (< angle (/ (* 7 pi) 4)))) ; 225 < angle < 315
-         (loop for y from (* -1 *finger-box-side*) to *finger-box-side* do 
+         (loop for y from (* -1 *finger-box-side-half*) to *finger-box-side-half* do 
                        (vector-push (list (round (* (cos angle) y)) y) coords))
-         (loop for x from (* -1 *finger-box-side*) to *finger-box-side* do 
+         (loop for x from (* -1 *finger-box-side-half*) to *finger-box-side-half* do 
                        (vector-push (list x (round (* (sin angle) x))) coords)))
      coords))
      
@@ -203,29 +213,34 @@
      (loop for x from 0 to (1- width) do 
         (let* ((cur-pos (+ (* width y) x))
                (val (elt *fingers-values* cur-pos)))
-            ;; if all fingers were hit -> break here               
+            ;; if all fingers were hit -> break here
+            (.print-log. "~d ~d: ~d --> ~%" x y val)
             (when (and (> val 0) (< val 100) (not (elt hits (/ val 10))))
                   ;; from 0 to pi with step *box-angle-step*
-                  (do ((angle 0 (+ angle *box-angle-step*))) ((> angle pi)) 
+                  (do ((angle 0 (+ angle *box-angle-step*))) ((> angle pi))
                       (let ((coords (coords-for-angle angle))
                             (hit-num 0))
+                           (.print-log. "         coords: ~a~%" coords)
                            (loop for point across coords do 
                               (let* ((in-x (+ (car point) x))
-                                     (in-y (+ (cdr (car point) y)))
+                                     (in-y (+ (car (cdr point)) y))
                                      (in-pos (+ (* width in-y) in-x)))
-                                    (when (>= in-pos 0)
+                                    (when (and (>= in-pos 0) (<= in-pos (length *fingers-values*)))
                                           (let ((in-val (elt *fingers-values* in-pos)))
                                                (when (and (> in-val 0)
                                                           (< in-val 100))
                                                      (if (= in-val val)
                                                          (incf hit-num)))))))
                            (when (>= hit-num *hits-pass*)
+                              (.print-log. "         hit-num: ~d / hit-pass: ~d~%" hit-num *hits-pass*)
                               (setf (elt hits (/ val 10)) t)
+                              (.print-log. "         hits: ~a~%" hits)
                               (loop for point across coords do 
                                  (let* ((in-x (+ (car point) x))
-                                        (in-y (+ (cdr (car point) y)))
+                                        (in-y (+ (car (cdr point)) y))
                                         (in-pos (+ (* width in-y) in-x)))
-                                     (setf (elt *finger-values* in-pos) (+ val 100))))))))))))
+                                     (when (and (>= in-pos 0) (<= in-pos (length *fingers-values*)))
+                                           (setf (elt *fingers-values* in-pos) (+ val 100))))))))))))))
                                                          
                 
 ;; takes a pixel RGB components and calculates new RGB components to show in UI
