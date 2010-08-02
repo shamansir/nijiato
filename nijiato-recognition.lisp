@@ -225,7 +225,7 @@
                               (let* ((in-x (+ (car point) x))
                                      (in-y (+ (car (cdr point)) y))
                                      (in-pos (+ (* width in-y) in-x)))
-                                    (when (and (>= in-pos 0) (<= in-pos (length *fingers-values*)))
+                                    (when (and (>= in-pos 0) (< in-pos (length *fingers-values*)))
                                           (let ((in-val (elt *fingers-values* in-pos)))
                                                (when (and (> in-val 0)
                                                           (< in-val 100))
@@ -239,7 +239,7 @@
                                  (let* ((in-x (+ (car point) x))
                                         (in-y (+ (car (cdr point)) y))
                                         (in-pos (+ (* width in-y) in-x)))
-                                     (when (and (>= in-pos 0) (<= in-pos (length *fingers-values*)))
+                                     (when (and (>= in-pos 0) (< in-pos (length *fingers-values*)))
                                            (setf (elt *fingers-values* in-pos) (+ val 100))))))))))))))
                                                          
                 
