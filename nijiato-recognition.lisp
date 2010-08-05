@@ -121,7 +121,8 @@
     (setq *fingers-values* (make-array (* width height)
                            :element-type '(unsigned-byte 8)
                            :initial-element 0)))
-                           
+
+; TODO temporary, remove                           
 (defun print-fingers-values (width height)
    (loop for y from 0 to (1- height) do
      (loop for x from 0 to (1- width) do 
@@ -209,38 +210,41 @@
   
 (defun detect-fingers-positions (width height)
   (let ((hits (make-array 10 :initial-element nil)))
+  (loop (unless (< (count t hits) 10) (return))
   (loop for y from 0 to (1- height) do
      (loop for x from 0 to (1- width) do 
         (let* ((cur-pos (+ (* width y) x))
                (val (elt *fingers-values* cur-pos)))
-            ;; if all fingers were hit -> break here
-            (.print-log. "~d ~d: ~d --> ~%" x y val)
-            (when (and (> val 0) (< val 100) (not (elt hits (/ val 10))))
-                  ;; from 0 to pi with step *box-angle-step*
+            (.print-log. "~d ~d: ~d (~a) --> ~%" x y val hits)
+            (when (and (> val 0) (< val 100) (not (elt hits (- (/ val 10) 1))))
+                  ; from 0 to pi with step *box-angle-step*
                   (do ((angle 0 (+ angle *box-angle-step*))) ((> angle pi))
                       (let ((coords (coords-for-angle angle))
                             (hit-num 0))
-                           (.print-log. "         coords: ~a~%" coords)
+                           (.print-log. "         angle: ~a : coords: ~a (x: ~d y: ~d val: ~d)~%" (* angle (/ 180 pi)) coords x y val)
                            (loop for point across coords do 
                               (let* ((in-x (+ (car point) x))
                                      (in-y (+ (car (cdr point)) y))
                                      (in-pos (+ (* width in-y) in-x)))
                                     (when (and (>= in-pos 0) (< in-pos (length *fingers-values*)))
                                           (let ((in-val (elt *fingers-values* in-pos)))
+                                               (.print-log. "              coord ~d:~d (~d): ~d~%" in-x in-y in-pos in-val)
                                                (when (and (> in-val 0)
                                                           (< in-val 100))
                                                      (if (= in-val val)
                                                          (incf hit-num)))))))
+                           (sleep .5) ; TODO temporary, remove it                                                         
                            (when (>= hit-num *hits-pass*)
                               (.print-log. "         hit-num: ~d / hit-pass: ~d~%" hit-num *hits-pass*)
-                              (setf (elt hits (/ val 10)) t)
+                              (setf (elt hits (- (/ val 10) 1)) t)
                               (.print-log. "         hits: ~a~%" hits)
+                              (sleep .5) ; TODO temporary, remove it
                               (loop for point across coords do 
                                  (let* ((in-x (+ (car point) x))
                                         (in-y (+ (car (cdr point)) y))
                                         (in-pos (+ (* width in-y) in-x)))
                                      (when (and (>= in-pos 0) (< in-pos (length *fingers-values*)))
-                                           (setf (elt *fingers-values* in-pos) (+ val 100))))))))))))))
+                                           (setf (elt *fingers-values* in-pos) (+ val 100)))))))))))))))
                                                          
                 
 ;; takes a pixel RGB components and calculates new RGB components to show in UI
@@ -256,3 +260,25 @@
                    (elt result 1) g
                    (elt result 2) b) result)
 		(color-from-finger-value (elt *fingers-values* pos))))
+		
+;; TODO temporary, remove		
+
+;                             0  1  2  3  4  5  6  7  8  9 10 11 12 13
+(setf *fingers-values* (list  0 10 30 30 30 30  0 30 30 30 30 30 30 20 ;  0
+                             30 10 20 10  0 30  0 20  0 20 10  0  0  0 ;  1
+                             30 10  0 10  0  0 10 20 30  0 30  0 20  0 ;  2
+                             20 10  0 10 10  0 20  0  0 30  0  0 10  0 ;  3
+                             10 10 30 20  0 10 20 30  0  0 30  0  0 10 ;  4
+                              0 10 20 20  0 20 10 20  0 10 20  0 10  0 ;  5
+                              0  0 20 20  0 20 10 10  0 10 30  0 30 20 ;  6
+                             10 10  0 20 20  0  0  0 10  0  0  0 10 10 ;  7
+                              0 10 10 20 20 20 10 20  0 10 10  0  0  0 ;  8
+                              0 10  0 20  0 20 30  0 10 10 10 10  0  0 ;  9
+                             10 10  0 20 30 20  0 30  0  0  0 10  0 10 ; 10
+                              0 10 20 20  0 20  0 20  0 20  0  0 10  0 ; 11
+                             30  0 20  0  0 20  0  0 10 10  0 10  0 20 ; 12
+                              0 20 10  0  0 20  0 10  0  0 10  0 10  0 ; 13
+                             10 20  0 30  0  0  0 10  0 10  0  0 20  0 ; 14
+                             10 10  0  0 20 20  0 20  0 30  0 20  0 10 ; 15
+                             20 10  0 10  0 10 20  0 10 30 10 40 50  0 ; 16 
+))
