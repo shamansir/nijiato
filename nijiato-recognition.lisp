@@ -210,7 +210,6 @@
   
 (defun detect-fingers-positions (width height)
   (let ((hits (make-array 10 :initial-element nil)))
-  (loop (unless (< (count t hits) 10) (return))
   (loop for y from 0 to (1- height) do
      (loop for x from 0 to (1- width) do 
         (let* ((cur-pos (+ (* width y) x))
@@ -238,13 +237,14 @@
                               (.print-log. "         hit-num: ~d / hit-pass: ~d~%" hit-num *hits-pass*)
                               (setf (elt hits (- (/ val 10) 1)) t)
                               (.print-log. "         hits: ~a~%" hits)
+                              (unless (< (count t hits) 10) (return))
                               (sleep .5) ; TODO temporary, remove it
                               (loop for point across coords do 
                                  (let* ((in-x (+ (car point) x))
                                         (in-y (+ (car (cdr point)) y))
                                         (in-pos (+ (* width in-y) in-x)))
                                      (when (and (>= in-pos 0) (< in-pos (length *fingers-values*)))
-                                           (setf (elt *fingers-values* in-pos) (+ val 100)))))))))))))))
+                                           (setf (elt *fingers-values* in-pos) (+ val 100))))))))))))))
                                                          
                 
 ;; takes a pixel RGB components and calculates new RGB components to show in UI
