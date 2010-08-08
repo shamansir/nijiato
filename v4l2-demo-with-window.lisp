@@ -170,7 +170,7 @@
 
 ;; => capture-thread
 
-(defun capture-thread (&key before-run every-frame switch-pixel)
+(defun capture-thread (&key before-run before-frame save-pixel every-frame switch-pixel)
   (.print-log. "capture-thread: capturing thread start~%")
   (multiple-value-bind (fd buffers)
     (video-init *capture-device*)
@@ -188,25 +188,32 @@
 	                          (declare (ignore buffer))
 	                          (setf frame-num (1+ frame-num))
 	                          
-	     (when every-frame (funcall every-frame frame-num))
+	     (when before-frame (funcall before-frame frame-num))
 	                          
 	     ;; (%send-out "~d~%" frame-num)
 	     ;; Silly rgb24->rgb32 converter
 	     (bt:with-lock-held (*camera-data-lock*)
 		   (declare (optimize (speed 3) (debug 0) (safety 0)))
-                 (loop for i fixnum from 0 below (* *got-width* *got-height*) do
-                      (let ((r (cffi:mem-aref address :uchar (+ (* 3 i) 0)))
-                            (g (cffi:mem-aref address :uchar (+ (* 3 i) 1)))
-                            (b (cffi:mem-aref address :uchar (+ (* 3 i) 2))))
+           (loop for i fixnum from 0 below (* *got-width* *got-height*) do
+               (let ((r (cffi:mem-aref address :uchar (+ (* 3 i) 0)))
+                     (g (cffi:mem-aref address :uchar (+ (* 3 i) 1)))
+                     (b (cffi:mem-aref address :uchar (+ (* 3 i) 2))))
                             
-           (if switch-pixel 
-               (let ((pixel-result (funcall switch-pixel i r g b)))
-                   (setf (aref *camera-data* (+ (* 4 i) 0)) (elt pixel-result 0)
-                         (aref *camera-data* (+ (* 4 i) 1)) (elt pixel-result 1)
-                         (aref *camera-data* (+ (* 4 i) 2)) (elt pixel-result 2)))
-               (setf (aref *camera-data* (+ (* 4 i) 0)) r
-                     (aref *camera-data* (+ (* 4 i) 1)) g
-                     (aref *camera-data* (+ (* 4 i) 2)) b))))))
+                 (when save-pixel (funcall save-pixel i r g b))
+                 
+                 (setf (aref *camera-data* (+ (* 4 i) 0)) r
+                       (aref *camera-data* (+ (* 4 i) 1)) g
+                       (aref *camera-data* (+ (* 4 i) 2)) b)))
+                 
+           (when every-frame (funcall every-frame frame-num *got-width* *got-height*))
+           
+           (when switch-pixel 
+              (loop for i fixnum from 0 below (* *got-width* *got-height*) do
+                 (let ((pixel-result (funcall switch-pixel i)))
+                    (if pixel-result 
+                        (setf (aref *camera-data* (+ (* 4 i) 0)) (elt pixel-result 0)
+                              (aref *camera-data* (+ (* 4 i) 1)) (elt pixel-result 1)
+                              (aref *camera-data* (+ (* 4 i) 2)) (elt pixel-result 2))))))))
 
 	     (when *camera-widget*
 	       (with-main-loop
@@ -310,11 +317,13 @@
 
 ;; => run-demo
 
-(defun run-demo (&key before-run every-frame switch-pixel)
+(defun run-demo (&key before-run before-frame save-pixel every-frame switch-pixel)
   (.print-log. "test: staring test~%")
   (let ((cap-thread 
            (bt:make-thread #'(lambda () (funcall #'capture-thread 
                                          :before-run before-run
+                                         :before-frame before-frame
+                                         :save-pixel save-pixel
                                          :every-frame every-frame
                                          :switch-pixel switch-pixel)) :name "capturer")))
 ;  (let ((cap-thread (bt:make-thread #'capture-thread :name "capturer")))                          

@@ -176,11 +176,16 @@
         (t             nil)
   ))  
   
+;; calculates (possible) finger from RGB components using pre-calibrated colors
+;; values and deltas, and stores the corresponding value in *fingers-values* array
   
+(defun store-finger-value (pos r g b)
+   (setf (aref *fingers-values* pos) (get-finger-value (/ r 255) (/ g 255) (/ b 255))))
+   
 ;; takes an angle in radians (practically between 0 and pi) and translates it 
 ;; into the array of (x y) coordinates pairs of pixels that 'draw' the line
 ;; representation of this angle in the square box with side equal to 
-;; (*finger-box-side* + 1). coordinates values may vary from (-1 * *finger-box-side*) 
+;; ((*finger-box-side* * 2) + 1). coordinates values may vary from (-1 * *finger-box-side*) 
 ;; to *finger-box-side* and the center is (0 0)
   
 (defun coords-for-angle (angle)
@@ -194,13 +199,14 @@
      coords))
      
 ;; replaces concrete elements in *finges-values* array with values more 
-;; than 100 to show where finger may be located. in fact, it checks the previous
+;; than 100 to show where fingers lines may be located. in fact, it checks the previous
 ;; value to be greater than zero, and if it is so, tries to find a line of same values
 ;; inside the box with side of *finger-box-side* around this point (see 'coords-for-angle')
 ;; using angles between 0 and pi with step *box-angle-step* and allowed error of missing
 ;; *error-tolerance* pixels
   
-(defun detect-fingers-positions (width height)
+(defun detect-fingers-positions (frame-num width height)
+  (declare (ignore frame-num))
   (let ((hits (make-array 10 :initial-element nil)))
   (loop for y from 0 to (1- height) do
      (loop for x from 0 to (1- width) do 
@@ -229,19 +235,11 @@
                                         (in-y (+ (car (cdr point)) y))
                                         (in-pos (+ (* width in-y) in-x)))
                                      (when (and (>= in-pos 0) (< in-pos (length *fingers-values*)))
-                                           (setf (elt *fingers-values* in-pos) (+ val 100))))))))))))))
-                                                         
+                                           (setf (elt *fingers-values* in-pos) (+ val 100))))))))))))))   
                 
-;; takes a pixel RGB components and calculates new RGB components to show in UI
-;; as 'may-be-a-finger' pixel, if this finger is recognized there, stores value
-;; in *fingers-values* array in 'pos' position
+;; calculates new RGB components to show in UI from the *fingers-values*, if
+;; finger (possibly) exists in this position
 
-(defun visualize-value (pos r g b)
-    (setf (aref *fingers-values* pos) (get-finger-value (/ r 255) (/ g 255) (/ b 255)))
-
-    (if (= (elt *fingers-values* pos) 0)
-        (let ((result (vector 0 0 0)))
-             (setf (elt result 0) r
-                   (elt result 1) g
-                   (elt result 2) b) result)
-		(color-from-finger-value (elt *fingers-values* pos))))
+(defun visualize-value (pos)
+    (when (not (= (elt *fingers-values* pos) 0))
+          (color-from-finger-value (elt *fingers-values* pos))))

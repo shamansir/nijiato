@@ -28,5 +28,7 @@
 (use-package :cl-v4l2-demo)
 		
 (v4l2demo:run-demo :before-run #'init-fingers-values
-                   :every-frame nil
+                   :before-frame nil
+                   :save-pixel #'store-finger-value
+                   :every-frame #'detect-fingers-positions
                    :switch-pixel #'visualize-value)
