@@ -325,8 +325,7 @@
                                          :before-frame before-frame
                                          :save-pixel save-pixel
                                          :every-frame every-frame
-                                         :switch-pixel switch-pixel)) :name "capturer")))
-;  (let ((cap-thread (bt:make-thread #'capture-thread :name "capturer")))                          
+                                         :switch-pixel switch-pixel)) :name "capturer")))                      
     (with-main-loop
       (.print-log. "test: creating gtk window objects~%")
       (let ((window (make-instance 'gtk-window

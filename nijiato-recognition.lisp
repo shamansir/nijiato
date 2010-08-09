@@ -74,7 +74,7 @@
 ;;; ========================================================= Inner Parameters >
 ;;; ----------------------------------------------------------------------------
 
-(defvar *finger-box-side-half* 18) ; half of the pixels-length of the line of 
+(defvar *finger-box-side-half* 15) ; half of the pixels-length of the line of 
                                    ; same color when decision that it is a finger is made
                                    ; so when 31 pixels is the length than required,
                                    ; set this var to 15, so the box side will be from
@@ -180,7 +180,6 @@
 ;; values and deltas, and stores the corresponding value in *fingers-values* array
   
 (defun store-finger-value (pos r g b)
-;  (.print-log. "storing fingers values ~d~%" pos)
    (setf (aref *fingers-values* pos) (get-finger-value (/ r 255) (/ g 255) (/ b 255))))
    
 ;; takes an angle in radians (practically between 0 and pi) and translates it 
@@ -190,7 +189,6 @@
 ;; to *finger-box-side* and the center is (0 0)
   
 (defun coords-for-angle (angle)
-  ;(.print-log. "coords for angle ~d~%" angle)
   (let ((coords (make-array (1+ (* *finger-box-side-half* 2)) :fill-pointer 0)))
      (if (or (and (> angle (/      pi  4)) (< angle (/ (* 3 pi) 4)))  ;  45 < angle < 135
              (and (> angle (/ (* 5 pi) 4)) (< angle (/ (* 7 pi) 4)))) ; 225 < angle < 315
@@ -209,7 +207,6 @@
   
 (defun detect-fingers-positions (frame-num width height)
   (declare (ignore frame-num))
-  ;(.print-log. "detect fingers positions ~d: ~d ~d~%" frame-num width height)
   (let ((hits (make-array 10 :initial-element nil)))
   (loop for y from 0 to (1- height) do
      (loop for x from 0 to (1- width) do 
@@ -244,6 +241,5 @@
 ;; finger (possibly) exists in this position
 
 (defun visualize-value (pos)
-;   (.print-log. "visualize value: ~d~%" pos)
     (when (not (= (elt *fingers-values* pos) 0))
           (color-from-finger-value (elt *fingers-values* pos))))
