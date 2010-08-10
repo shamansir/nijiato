@@ -100,6 +100,8 @@
 ;;; ==================================================================== Macro >
 ;;; ----------------------------------------------------------------------------
 
+;; Scrolls through plist, passing each key and value to the specified function
+;;
 ;; Usage: (.plist/map. (list :a 2 :b 3 :c 4) (lambda (k v) (format t "~a~%" (list k v)))
 (defmacro .plist/map. (plist func)
   (let ((key-name (gensym)) 
@@ -107,12 +109,37 @@
     `(loop for (,key-name ,value-name . nil) on ,plist by #'cddr do 
                           (funcall (,@func) ,key-name ,value-name))))
 
+;; Scrolls through plist, passing key, value and current list state to the specified function
+;;
 ;; Usage: (.plist/map-inline. (list :a 2 :b 3 :c 4) (lambda (k v l) (format t "~a~%" (list k v l)))
 (defmacro .plist/map-inline. (plist func) 
   (let ((key-name (gensym)) 
         (value-name (gensym))) 
     `(loop for (,key-name ,value-name . nil) on ,plist by #'cddr do 
                           (funcall (,@func) ,key-name ,value-name ,plist))))
+                          
+;; Sets last not-true item of somelist to true (modifies passed list, returns list if changed, nil if not)
+;; Do not pass lists, created in the place: (mark-last (list t t nil nil)) is wrong, pass only variables
+;;
+;; (defvar *somelist* (list t nil nil nil))
+;; (mark-last *somelist*) => (list t t nil nil)
+;; (mark-last *somelist*) => (list t t t nil)
+;; (mark-last *somelist*) => (list t t t t)
+;; (mark-last *somelist*) => nil ; list stays in the same state
+(defmacro mark-last (somelist)
+   (let ((index (gensym)))
+     `(dotimes (,index (length ,somelist)) (when (not (elt ,somelist ,index)) (setf (elt ,somelist ,index) t) (return ,somelist)))))
+     
+;; Gets list of two items and checks if both elements are true
+;;
+;; (bothp (list t t)) => t
+;; (bothp (list nil t)) => nil
+;; (bothp (list t nil)) => nil
+;; (bothp (list nil nil)) => nil
+;; (bothp (list t t t)) => t
+;; (bothp (list t t nil)) => t
+(defmacro bothp (somelist)
+    `(and (elt ,somelist 0) (elt ,somelist 1)))    
 
 ;;; ================================================================ Functions >
 ;;; ----------------------------------------------------------------------------
@@ -180,7 +207,7 @@
 ;; values and deltas, and stores the corresponding value in *fingers-values* array
   
 (defun store-finger-value (pos r g b)
-   (setf (aref *fingers-values* pos) (get-finger-value (/ r 255) (/ g 255) (/ b 255))))
+   (setf (elt *fingers-values* pos) (get-finger-value (/ r 255) (/ g 255) (/ b 255))))
    
 ;; takes an angle in radians (practically between 0 and pi) and translates it 
 ;; into the array of (x y) coordinates pairs of pixels that 'draw' the line
