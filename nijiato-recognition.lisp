@@ -29,30 +29,33 @@
                                :middle 20
                                :ring   30
                                :little 40))
+                               
+(defvar *hands-shifts* (list :right  0
+                             :left   50))
 
-;; right-hand positions                                         x   y   z 
-(defparameter *rh-positions* (list :thumb  (list :start (vector nil nil nil) 
-                                                 :end   (vector nil nil nil))
-                                   :index  (list :start (vector nil nil nil) 
-                                                 :end   (vector nil nil nil))
-                                   :middle (list :start (vector nil nil nil) 
-                                                 :end   (vector nil nil nil))
-                                   :ring   (list :start (vector nil nil nil) 
-                                                 :end   (vector nil nil nil))
-                                   :little (list :start (vector nil nil nil) 
-                                                 :end   (vector nil nil nil))))
+;; right-hand positions
+(defparameter *rh-positions* (list :thumb  (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil))
+                                   :index  (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil))
+                                   :middle (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil))
+                                   :ring   (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil))
+                                   :little (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil))))
 
-;; left-hand positions                                          x   y   z 
-(defparameter *lh-positions* (list :thumb  (list :start (vector nil nil nil) 
-                                                 :end   (vector nil nil nil))
-                                   :index  (list :start (vector nil nil nil) 
-                                                 :end   (vector nil nil nil))
-                                   :middle (list :start (vector nil nil nil) 
-                                                 :end   (vector nil nil nil))
-                                   :ring   (list :start (vector nil nil nil) 
-                                                 :end   (vector nil nil nil))
-                                   :little (list :start (vector nil nil nil) 
-                                                 :end   (vector nil nil nil))))
+;; left-hand positions
+(defparameter *lh-positions* (list :thumb  (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil))
+                                   :index  (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil))
+                                   :middle (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil))
+                                   :ring   (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil))
+                                   :little (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil))))
 
 (defparameter *hands-positions* (list :right *rh-positions*
                                       :left  *lh-positions*))
@@ -139,7 +142,7 @@
 ;; (bothp (list t t t)) => t
 ;; (bothp (list t t nil)) => t
 (defmacro bothp (somelist)
-    `(and (elt ,somelist 0) (elt ,somelist 1)))    
+    `(and (elt ,somelist 0) (elt ,somelist 1)))
 
 ;;; ================================================================ Functions >
 ;;; ----------------------------------------------------------------------------
@@ -152,10 +155,10 @@
 ;; returns 00-99 value for (un)detected finger states for concrete pixel to 
 ;; put it in *colors-values* array
 
-(defun get-finger-value (r g b)
+(defun get-finger-value (hand r g b)
   (.plist/map. *fingers-colors* 
      (lambda (finger-name required-colors)
-        (let* ((deltas (getf *fingers-deltas* finger-name)) 
+        (let* ((deltas (getf *fingers-deltas* finger)) 
                (rr (elt required-colors 0))
                (gg (elt required-colors 1))
                (bb (elt required-colors 2))
@@ -170,7 +173,8 @@
              (minusp (- (- g gg) dg))
              (plusp  (+ (- b bb) db))
              (minusp (- (- b bb) db)))
-             (return-from get-finger-value (+ 9 (getf *fingers-shifts* finger-name)))))))
+             (return-from get-finger-value (+ (+ 9 (getf *fingers-shifts* finger)) 
+                                              (getf *hands-shifts* hand)))))))
   0)
 
 (defun color-from-finger-value (value)
@@ -187,6 +191,11 @@
         ((< value 100) (vector 0   0   255)) ; l-little / blue
         (t             (vector 0   0   0  ))
   ))
+  
+(defun hand-from-value (value)
+  (cond ((= value 0)   nil)
+        ((< value 50)  :left )
+        ((< value 100) :right)))
   
 (defun finger-from-value (value)
   (cond ((= value 0)   nil)
@@ -207,7 +216,7 @@
 ;; values and deltas, and stores the corresponding value in *fingers-values* array
   
 (defun store-finger-value (pos r g b)
-   (setf (elt *fingers-values* pos) (get-finger-value (/ r 255) (/ g 255) (/ b 255))))
+   (setf (elt *fingers-values* pos) (get-finger-value :left (/ r 255) (/ g 255) (/ b 255))))
    
 ;; takes an angle in radians (practically between 0 and pi) and translates it 
 ;; into the array of (x y) coordinates pairs of pixels that 'draw' the line
@@ -234,7 +243,7 @@
   
 (defun detect-fingers-positions (frame-num width height)
   (declare (ignore frame-num))
-  (let ((hits (make-array 10 :initial-element nil)))
+  (let (hits (make-array 10 :initial-element nil)))
   (loop for y from 0 to (1- height) do
      (loop for x from 0 to (1- width) do 
         (let* ((cur-pos (+ (* width y) x))

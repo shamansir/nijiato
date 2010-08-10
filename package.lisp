@@ -6,7 +6,7 @@
      #:get-finger-value
      #:color-from-finger-value
     
-     #:*fingers-values*    
+     #:*fingers-values*
      #:*fingers-deltas*
      #:*fingers-colors*
      #:*fingers-shifts*
