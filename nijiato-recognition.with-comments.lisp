@@ -34,37 +34,37 @@
                              :right  50))
 
 ;; right-hand positions
-(defparameter *rh-positions* (list :thumb  (list :start (list :px nil :py nil :pz nil) 
-                                                 :end   (list :px nil :py nil :pz nil)
+(defparameter *rh-positions* (list :thumb  (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil)
                                                  :angle nil)
-                                   :index  (list :start (list :px nil :py nil :pz nil) 
-                                                 :end   (list :px nil :py nil :pz nil)
+                                   :index  (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil)
                                                  :angle nil)
-                                   :middle (list :start (list :px nil :py nil :pz nil) 
-                                                 :end   (list :px nil :py nil :pz nil)
+                                   :middle (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil)
                                                  :angle nil)
-                                   :ring   (list :start (list :px nil :py nil :pz nil) 
-                                                 :end   (list :px nil :py nil :pz nil)
+                                   :ring   (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil)
                                                  :angle nil)
-                                   :little (list :start (list :px nil :py nil :pz nil) 
-                                                 :end   (list :px nil :py nil :pz nil)
+                                   :little (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil)
                                                  :angle nil)))
 
 ;; left-hand positions
-(defparameter *lh-positions* (list :thumb  (list :start (list :px nil :py nil :pz nil) 
-                                                 :end   (list :px nil :py nil :pz nil)
+(defparameter *lh-positions* (list :thumb  (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil)
                                                  :angle nil)
-                                   :index  (list :start (list :px nil :py nil :pz nil) 
-                                                 :end   (list :px nil :py nil :pz nil)
+                                   :index  (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil)
                                                  :angle nil)
-                                   :middle (list :start (list :px nil :py nil :pz nil) 
-                                                 :end   (list :px nil :py nil :pz nil)
+                                   :middle (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil)
                                                  :angle nil)
-                                   :ring   (list :start (list :px nil :py nil :pz nil) 
-                                                 :end   (list :px nil :py nil :pz nil)
+                                   :ring   (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil)
                                                  :angle nil)
-                                   :little (list :start (list :px nil :py nil :pz nil) 
-                                                 :end   (list :px nil :py nil :pz nil)
+                                   :little (list :start (list :x nil :y nil :z nil) 
+                                                 :end   (list :x nil :y nil :z nil)
                                                  :angle nil)))
 
 (defparameter *hands-positions* (list :right *rh-positions*
@@ -99,7 +99,7 @@
 (defvar *error-tolerance* 4) ; how many pixels in the line can be skipped when
                              ; determining finger angle
                              
-(defvar *hands-allowed-distance* 80) ; the distance in pixels between same-colored
+(defvar *hands-allowed-distance* 20) ; the distance in pixels between same-colored
                                      ; fingers when they are determined as different
                              
 (defvar *hits-pass* (- (1+ (* 2 *finger-box-side-half*)) *error-tolerance*))
@@ -223,15 +223,7 @@
         ((< value 90)  :ring  ) ; l-ring   / green
         ((< value 100) :little) ; l-little / blue
         (t             nil)
-  ))
-  
-(defun clear-hands-positions ()
-   (.plist/map. (getf *hands-positions* :right)
-       (lambda (finger positions)
-         (declare (ignore finger))
-         (setf positions (list :start (list :px nil :py nil :pz nil)
-                               :end   (list :px nil :py nil :pz nil)
-                               :angle nil)))))
+  ))  
   
 ;; calculates (possible) finger from RGB components using pre-calibrated colors
 ;; values and deltas, and stores the corresponding value in *fingers-values* array
@@ -261,19 +253,18 @@
 (defun predict-current-hand (x y finger hits)
    (declare (ignore y))
    (let ((left-hand-point-slot (getf (getf *hands-positions* :left) finger)))
-        (if (or (eq (getf (getf left-hand-point-slot :start) :px) nil)
-                (eq (getf (getf left-hand-point-slot :start) :py) nil)) 
+        (if (or (eq (getf (getf left-hand-point-slot :start) :x) nil)
+                (eq (getf (getf left-hand-point-slot :start) :y) nil)) 
             :left
-            (let ((left-start-x (getf (getf left-hand-point-slot :start) :px)))
-                 (if (> x left-start-x)
-                     (if (> (- x left-start-x) *hands-allowed-distance*) :right :left)
-                     :left)))))
-
-#|
-(defun predict-current-hand (x y finger hits)
-   (declare (ignore y))
-   :left)
-|#
+            (let* ((right-hand-point-slot (getf (getf *hands-positions* :right) finger))
+                   (right-start-x (getf (getf right-hand-point-slot :start) :x)))
+                 (if (> x right-start-x)
+                     (if (> (- x right-start-x) *hands-allowed-distance*) :right :left)
+                     (let ((temp (getf *hands-positions* :right)))
+                           (setf (getf *hands-positions* :right) (getf *hands-positions* :left))
+                           (setf (getf *hands-positions* :left) temp)
+                           (setf (elt hits (floor (+ (elt *finger-shifts* finger) (elt *hands-shifts* :left)) 10)) nil)
+                           :left))))))
      
 ;; replaces concrete elements in *finges-values* array with values more 
 ;; than 100 to show where fingers lines may be located. in fact, it checks the previous
@@ -284,50 +275,84 @@
   
 (defun detect-fingers-positions (frame-num width height)
   (declare (ignore frame-num))
-  (clear-hands-positions)
+  ; clear hits statistics (what fingers were detected, one place for each finger)
   (let ((hits (make-array 10 :initial-element nil)))
-  (%send-out "frame ~d~%" frame-num)  
+  ; scroll through all of the frame pixels, using x and y
   (loop for y from 0 to (1- height) do
      (loop for x from 0 to (1- width) do 
+        ; _cur-pos_ is the position in *fingers-values* array corresponding to this concrete pixel
+        ; _val_ is the value that placed in this position (from 0 to 50, was set by 
+        ;       get-finger-value before, using this pixel color)
         (let* ((cur-pos (+ (* width y) x))
                (val (elt *fingers-values* cur-pos)))
+            ; if value is between 0 and 100 (it is greater than 0 if finger was determined by
+            ; color using get-finger-value, and it is less than 100 if no finger was detected
+            ; on this pixel before)
             (when (and (> val 0) (< val 100))
+              ; now, using this value, we know the finger, we can predict the hand that
+              ; located here, hand-shift is 0 (for left hand) or 50 (for right), depending on the hand returned,
+              ; so when added to value, it stays less than 100, but now it contains information 
+              ; about the hand
               (let* ((finger (finger-from-value val))
                      (hand (predict-current-hand x y finger hits))
                      (hand-shift (getf *hands-shifts* hand))
                      (val (+ val hand-shift)))
+              ; if we have not detected this finger before; (floor val 10) represents 
+              ; the exclusive index of correspoding finger in _hits_array
               (when (not (elt hits (floor val 10)))
+                  ; check angles one by one, from 0 to pi with step *box-angle-step*
                   (do ((angle 0 (+ angle *box-angle-step*))) ((> angle pi))
+                      ; collect all the relative pixels coords for the line with this angle;
+                      ; set _hit-num_ to 0, it is the number of pixels matched the value on this line
                       (let ((coords (coords-for-angle angle))
                             (hit-num 0))
+                           ; for each point in coordinates list we got
                            (loop for point across coords do 
+                              ; calculate real pixel inner-x, inner-y and inner-pos using relative values
+                              ; stored with the point
                               (let* ((in-x (+ (car point) x))
                                      (in-y (+ (car (cdr point)) y))
                                      (in-pos (+ (* width in-y) in-x)))
+                                    ; if calculated position fits *fingers-values* array bounds
                                     (when (and (>= in-pos 0) (< in-pos (length *fingers-values*)))
+                                          ; get the value for the pixel in this position (_hand-shift_
+                                          ; is added just to keep synchronized with outer value we check) 
                                           (let ((in-val (+ (elt *fingers-values* in-pos) hand-shift)))
+                                               ; if inner value fits 0 > - > 100 bounds and matches 
+                                               ; the outer value - bingo, we got one more pixel-hit here
                                                (when (and (> in-val 0)
                                                           (< in-val 100))
                                                      (if (= in-val val)
                                                          (incf hit-num)))))))
+                           ; when number of pixel-hits for this angle is accepted as sufficient condition
+                           ; for finger to match
                            (when (>= hit-num *hits-pass*)
+                              ; (if we already detected all fingers, just return)
+                              ; (unless (< (count t hits) 10) (return))
+                              ; remember that finger position and angle were detected
                               (setf (elt hits (floor val 10)) t)
-                              (loop for point across coords do 
-                                 (let* ((in-x (+ (car point) x))
-                                        (in-y (+ (car (cdr point)) y))
-                                        (in-pos (+ (* width in-y) in-x)))
-                                     (when (and (>= in-pos 0) (< in-pos (length *fingers-values*)))
-                                           (setf (elt *fingers-values* in-pos) (+ val 100)))))
+                              ; save finger position in appropriate place
+                              ; and send information to output
                               (let ((point-slot (getf (getf *hands-positions* hand) finger))
                                     (start-x (+ (car (elt coords 0)) x))
                                     (start-y (+ (car (cdr (elt coords 0))) y))
                                     (end-x (+ (car (elt coords (1- (length coords)))) x))
                                     (end-y (+ (car (cdr (elt coords (1- (length coords))))) y)))
-                                   (setf (getf point-slot :start) (list :px start-x :py start-y :pz nil))
-                                   (setf (getf point-slot :end)   (list :px end-x   :py end-y   :pz nil))
-                                   (setf (getf point-slot :angle) angle)
-                                   (%send-out "~a - ~a : (~d ~d) (~d ~d) ~d" 
-                                              hand finger start-x start-y end-x end-y (* angle (/ 180 pi)))))))))))))))
+                                   (setf (getf (getf point-slot :start) :x) start-x)
+                                   (setf (getf (getf point-slot :start) :y) start-y)
+                                   (setf (getf (getf point-slot :end)   :x) end-x)
+                                   (setf (getf (getf point-slot :end)   :y) end-y)
+                                   (setf       (getf point-slot :angle)     angle)
+                                   (%send-out "~a - ~a : (~d ~d) (~d ~d) ~d~%" hand finger start-x start-y end-x end-y angle))
+                              ; for all the pixels where finger was detected, set value in *fingers-values* 
+                              ; to the same + 100, so this pixels will never be tested for another finger 
+                              ; and we can relay on the fact that the finger is here and positioned with this angle
+                              (loop for point across coords do 
+                                 (let* ((in-x (+ (car point) x))
+                                        (in-y (+ (car (cdr point)) y))
+                                        (in-pos (+ (* width in-y) in-x)))
+                                     (when (and (>= in-pos 0) (< in-pos (length *fingers-values*)))
+                                           (setf (elt *fingers-values* in-pos) (+ val 100))))))))))))))))
                 
 ;; calculates new RGB components to show in UI from the *fingers-values*, if
 ;; finger (possibly) exists in this position
