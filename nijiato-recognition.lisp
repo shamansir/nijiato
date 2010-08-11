@@ -326,7 +326,7 @@
                                    (setf (getf point-slot :start) (list :px start-x :py start-y :pz nil))
                                    (setf (getf point-slot :end)   (list :px end-x   :py end-y   :pz nil))
                                    (setf (getf point-slot :angle) angle)
-                                   (%send-out "~a - ~a : (~d ~d) (~d ~d) ~d" 
+                                   (%send-out "~a - ~a : (~d ~d) (~d ~d) ~d~%" 
                                               hand finger start-x start-y end-x end-y (* angle (/ 180 pi)))))))))))))))
                 
 ;; calculates new RGB components to show in UI from the *fingers-values*, if
