@@ -1,4 +1,5 @@
 .project
+nijiato-demo-load.fasl
 
 syntax: glob
 *.swp
