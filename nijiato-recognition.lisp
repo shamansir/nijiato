@@ -3,12 +3,12 @@
 ;;; ================================================================== Defines >
 ;;; ----------------------------------------------------------------------------
 
-;; fingers-deltas                              r    g    b
-(defvar *fingers-deltas* (list :thumb  (vector 0.09 0.07 0.04)
-                               :index  (vector 0.04 0.05 0.05)
-                               :middle (vector 0.07 0.06 0.06)
-                               :ring   (vector 0.05 0.06 0.06)
-                               :little (vector 0.08 0.07 0.07)))
+;; fingers-deltas                                    r    g    b
+(defparameter *fingers-deltas* (list :thumb  (vector 0.09 0.07 0.04)
+                                     :index  (vector 0.04 0.05 0.05)
+                                     :middle (vector 0.07 0.06 0.06)
+                                     :ring   (vector 0.05 0.06 0.06)
+                                     :little (vector 0.08 0.07 0.07)))
 
 ;; fingers-colors:
 ;; thumb red #77275a 119:39:90 r > b, b > g; (b - g) ~ (r - b)
@@ -16,22 +16,22 @@
 ;; middle yellow #949c6d 148:156:109 r ~ g; r > b, g > b; (r - b) ~ (g - b) 
 ;; ring green #1d585a 29:88:90 g > r, g > b; r ~ b; (g - r) ~ (g - b)
 ;; little blue #15599b 21:89:155 b > g > r; (b - g) ~ (g - b)
-;;                                             r    g    b
-(defvar *fingers-colors* (list :thumb  (vector 0.47 0.15 0.35)
-                               :index  (vector 0.64 0.40 0.46)
-                               :middle (vector 0.58 0.61 0.43)
-                               :ring   (vector 0.11 0.34 0.35)
-                               :little (vector 0.08 0.35 0.61)))
+;;                                                   r    g    b
+(defparameter *fingers-colors* (list :thumb  (vector 0.47 0.15 0.35)
+                                     :index  (vector 0.64 0.40 0.46)
+                                     :middle (vector 0.58 0.61 0.43)
+                                     :ring   (vector 0.11 0.34 0.35)
+                                     :little (vector 0.08 0.35 0.61)))
 
 ;; shifts
-(defvar *fingers-shifts* (list :thumb  0
-                               :index  10
-                               :middle 20
-                               :ring   30
-                               :little 40))
+(defparameter *fingers-shifts* (list :thumb  0
+                                     :index  10
+                                     :middle 20
+                                     :ring   30
+                                     :little 40))
                                
-(defvar *hands-shifts* (list :left   0
-                             :right  50))
+(defparameter *hands-shifts* (list :left   0
+                                   :right  50))
 
 ;; right-hand positions
 (defparameter *rh-positions* (list :thumb  (list :start (list :px nil :py nil :pz nil) 
@@ -259,7 +259,7 @@
 ;; if new condition does not fits them
 
 (defun predict-current-hand (x y finger hits)
-   (declare (ignore y))
+   (declare (ignore y hits))
    (let ((left-hand-point-slot (getf (getf *hands-positions* :left) finger)))
         (if (or (eq (getf (getf left-hand-point-slot :start) :px) nil)
                 (eq (getf (getf left-hand-point-slot :start) :py) nil)) 
@@ -283,7 +283,7 @@
 ;; *error-tolerance* pixels
   
 (defun detect-fingers-positions (frame-num width height)
-  (declare (ignore frame-num))
+; (declare (ignore frame-num))
   (clear-hands-positions)
   (let ((hits (make-array 10 :initial-element nil)))
   (%send-out "frame ~d~%" frame-num)  

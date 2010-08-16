@@ -1,3 +1,5 @@
+(in-package :cl-user)
+
 (defpackage #:nijiato-recognition
     (:nicknames #:nijiato)
     (:use :cl)
@@ -5,6 +7,8 @@
      
      #:get-finger-value
      #:color-from-finger-value
+     #:hand-from-value
+     #:finger-from-value
     
      #:*fingers-values*
      #:*fingers-deltas*
