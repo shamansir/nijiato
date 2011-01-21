@@ -35,7 +35,7 @@ class NCalibration {
         color last = px[_rTopY*width+_rTopY];
         for (int x = _rTopX; x <= (_rTopX + _rWidth); x++) {
             for (int y = _rTopY; y <= (_rTopY + _rHeight); y++) {
-                last = lerpColor(px[y*width+x], last, 0.5, HSB);
+                last = lerpColor(px[y*width+x], last, 0.5);
             }    
         }
         return last;
@@ -87,7 +87,7 @@ class NCalibration {
     }
     
     void _showDetectionRect() {
-        stroke(0, 0, 255);
+        stroke(255);
         noFill();
         rect(_rTopX, _rTopY, _rWidth, _rHeight);
     }
@@ -103,14 +103,14 @@ class NCalibration {
     void _showAlreadyDetected() {
         for (int i = 0; i < 10; i++) {
             if (fingers[i] != -1) {
-              stroke(0, 0, 255);
+              stroke(255);
               fill(fingers[i]);
               rect(i << 5, 0, 31, 31);
            }
         }
         for (int i = 0; i < 2; i++) {
             if (hands[i] != -1) {
-              stroke(0, 0, 255);
+              stroke(255);
               fill(hands[i]);
               rect(i << 5, 32, 31, 31);
            }
@@ -118,7 +118,7 @@ class NCalibration {
     }  
     
     void _showDetected(String name, int value, color result, int offset) {
-        stroke(0, 0, 255);
+        stroke(255);
         fill(result);
         rect(value << 5, offset, 31, 31);
         //println("detected " + name + " (" + value + "): " + result);

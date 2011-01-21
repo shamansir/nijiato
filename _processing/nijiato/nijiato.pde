@@ -1,5 +1,4 @@
 import hypermedia.video.*;
-import java.awt.Rectangle;
 
 OpenCV opencv;
 boolean calibrating = false;
@@ -37,7 +36,6 @@ PFont _font;
 void setup() {
     size(320,240);
     
-    colorMode(HSB, 255);    
     calibration.init();
     
     _font = loadFont("DroidSans-28.vlw");
@@ -78,7 +76,7 @@ void draw() {
             calibration.calibrateHand(curHand);
         } else {
             noStroke();
-            fill(0, 0, 255);
+            fill(255);
             text("Start!", 150, 150);
             calibrating = false;
         }
