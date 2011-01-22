@@ -1,11 +1,11 @@
 class NCalibration {
   
-    final int DETECTION_TIME = 5000;
+    final int DETECTION_TIME = 10000;
   
     color[] fingers = new color[10];
     color[] hands = new color[2];
-    int[][] _fingers_d = new int[10][3]; // deltas
-    int[][] _hands_d = new int[2][3]; // deltas
+    byte[][] _fingers_d = new byte[10][3]; // deltas
+    byte[][] _hands_d = new byte[2][3]; // deltas    
     int _lastDetectionTime = 0;
     
     int _rTopX, _rTopY, _rWidth, _rHeight;
@@ -14,7 +14,17 @@ class NCalibration {
     
     public NCalibration() {
         for (int i = 0; i < 10; i++) fingers[i] = -1;
-        for (int i = 0; i < 2; i++) hands[i] = -1;
+        for (int i = 0; i < 2; i++) hands[i] = -1;        
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 3; j++) {
+                _fingers_d[i][j] = 4;
+            }
+        }
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 3; j++) {
+                _hands_d[i][j] = 4;
+            }
+        }
     }
     
     void init() {
@@ -32,7 +42,7 @@ class NCalibration {
     color _colorInRect() {
         _curFrame.loadPixels();
         color[] px = _curFrame.pixels;
-        color last = px[_rTopY*width+_rTopY];
+        color last = px[_rTopY*width+_rTopX];
         for (int x = _rTopX; x <= (_rTopX + _rWidth); x++) {
             for (int y = _rTopY; y <= (_rTopY + _rHeight); y++) {
                 last = lerpColor(px[y*width+x], last, 0.5);

@@ -6,8 +6,8 @@ boolean calibrating = false;
 // DroidSans-42.vlw
 
 class H {
-    static final int RIGHT_HAND = 0;
-    static final int LEFT_HAND = 1;  
+    static final int LEFT_HAND = 0;
+    static final int RIGHT_HAND = 1;  
 }
 
 class F {
@@ -24,16 +24,31 @@ class F {
     static final int RIGHT_LITTLE = 9;
 }
 
+class ncoord { int x, y, z; }
+
+class ndelta { float dx, dy, dz; }
+
+class nrect { ncoord tl, tr, bl, br; }
+
 class NPositions {
-    int[][] fingers = new int[10][2];
-    int[][] hands = new int[2][2];
+    
+    int[][] fingers;
+    int[][] hands;
+
+    NPositions() {
+        fingers = new int[10][2];
+        hands = new int[2][2];
+    }
+
 }
 
 NPositions positions = new NPositions();
 NCalibration calibration = new NCalibration();
+NDetection detection = new NDetection(calibration, positions);
 PFont _font;
 
 void setup() {
+  
     size(320,240);
     
     calibration.init();
@@ -58,18 +73,19 @@ void setup() {
     
 }
 
-void draw() {    
+void draw() {
+  
     opencv.read();
     
     PImage curImage = opencv.image(OpenCV.SOURCE);
-    calibration.frame(curImage);
     image(curImage, 0, 0);    
     
     if (!calibrating) {
-        // TODO: 
+        detection.detect(curImage);
     } else {
+        calibration.frame(curImage);
         int curFinger;
-        int curHand;
+        int curHand;        
         if ((curFinger = calibration.getLastNotCalibratedFinger()) >= 0) {
             calibration.calibrateFinger(curFinger);
         } else if ((curHand = calibration.getLastNotCalibratedHand()) >= 0) {
@@ -80,6 +96,7 @@ void draw() {
             text("Start!", 150, 150);
             calibrating = false;
         }
+        // TODO: save calibration data
     }
        
 }
