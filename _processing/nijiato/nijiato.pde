@@ -33,7 +33,13 @@ class F {
 class ncoord { int x, y, z; 
     ncoord() { x = -1; y = -1; z = -1; }
     ncoord(int _x, int _y, int _z) { x = _x; y = _y; z = _z; }
-    void reset() { x = -1; y = -1; z = -1; } 
+    void reset() { x = -1; y = -1; z = -1; }
+    void update(int _x, int _y, int _z) { x = _x; y = _y; z = _z; }
+    void update(ncoord other) { x = other.x; y = other.y; z = other.z; }
+    boolean is_set() { return (x != -1) && (y != -1); }
+    boolean near(ncoord other)  { return (abs(other.x - x) <= 32) &&
+                                         (abs(other.y - y) <= 32) &&
+                                         (abs(other.z - z) <= 32); }
 }
 
 class ndelta { float dr, dg, db;
@@ -49,11 +55,13 @@ class ndelta { float dr, dg, db;
     }
 }
 
-class nrect { ncoord tl, tr, bl, br; 
-    nrect() { tl = new ncoord(); tr = new ncoord();
-              bl = new ncoord(); br = new ncoord(); }
-    void reset() { tl.reset(); tr.reset(); 
-                   bl.reset(); br.reset(); }
+class nrect { ncoord p1, p2, p3, p4; 
+    nrect() { p1 = new ncoord(); p2 = new ncoord();
+              p3 = new ncoord(); p4 = new ncoord(); }
+    void reset() { p1.reset(); p2.reset(); 
+                   p3.reset(); p4.reset(); }
+    boolean is_set() { return p1.is_set() && p2.is_set() &&
+                              p3.is_set() && p4.is_set(); }  
 }
 
 class NPositions {
@@ -107,7 +115,8 @@ void draw() {
     image(curImage, 0, 0);    
     
     if (!calibrating) {
-        detection.detect(curImage);
+        NPositions positions = detection.detect(curImage);
+        detection.showRects();
     } else {
         calibration.frame(curImage);
         int curFinger;
@@ -125,4 +134,8 @@ void draw() {
         // TODO: save calibration data
     }
        
+}
+
+void keyReleased() {
+    if (key == 'r') calibrating = true; 
 }
