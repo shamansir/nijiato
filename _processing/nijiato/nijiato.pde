@@ -6,38 +6,54 @@ boolean calibrating = false;
 // DroidSans-42.vlw
 
 class H {
-    static final int LEFT_HAND = 0;
-    static final int RIGHT_HAND = 1;  
+    static final byte LEFT_HAND = 0;
+    static final byte RIGHT_HAND = 1;
+    
+    static final byte HANDS_COUNT = 2;
 }
 
 class F {
-    static final int LEFT_LITTLE = 0;
-    static final int LEFT_RING = 1;
-    static final int LEFT_MIDDLE = 2;
-    static final int LEFT_INDEX = 3;
-    static final int LEFT_THUMB = 4;
+    static final byte LEFT_LITTLE = 0;
+    static final byte LEFT_RING = 1;
+    static final byte LEFT_MIDDLE = 2;
+    static final byte LEFT_INDEX = 3;
+    static final byte LEFT_THUMB = 4;
    
-    static final int RIGHT_THUMB = 5;
-    static final int RIGHT_INDEX = 6;
-    static final int RIGHT_MIDDLE = 7;
-    static final int RIGHT_RING = 8;
-    static final int RIGHT_LITTLE = 9;
+    static final byte RIGHT_THUMB = 5;
+    static final byte RIGHT_INDEX = 6;
+    static final byte RIGHT_MIDDLE = 7;
+    static final byte RIGHT_RING = 8;
+    static final byte RIGHT_LITTLE = 9;
+    
+    static final byte FINGERS_COUNT = 10;
 }
 
-class ncoord { int x, y, z; }
+class ncoord { int x, y, z; 
+    ncoord() { x = -1; y = -1; z = -1; }
+    ncoord(int _x, int _y, int _z) { x = _x; y = _y; z = _z; }
+    void reset() { x = -1; y = -1; z = -1; } 
+}
 
-class ndelta { float dx, dy, dz; }
+class ndelta { float dr, dg, db;
+    ndelta() { dr = 0; dg = 0; db = 0; }
+    ndelta(float _dr, int _dg, int _db) { dr = _dr; dg = _dg; db = _db; }
+}
 
-class nrect { ncoord tl, tr, bl, br; }
+class nrect { ncoord tl, tr, bl, br; 
+    nrect() { tl = new ncoord(); tr = new ncoord();
+              bl = new ncoord(); br = new ncoord(); }
+    void reset() { tl.reset(); tr.reset(); 
+                   bl.reset(); br.reset(); }
+}
 
 class NPositions {
     
-    int[][] fingers;
-    int[][] hands;
+    ncoord[] fingers;
+    ncoord[] hands;
 
     NPositions() {
-        fingers = new int[10][2];
-        hands = new int[2][2];
+        fingers = new ncoord[F.FINGERS_COUNT];
+        hands = new ncoord[H.HANDS_COUNT];
     }
 
 }

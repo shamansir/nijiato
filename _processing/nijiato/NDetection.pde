@@ -2,12 +2,12 @@ class NDetection {
   
   NCalibration calibration;
   NPositions positions;
-  int[][][] _rects;
+  nrect[] _rects;
   
   NDetection(NCalibration calibration, NPositions positions) {
       this.calibration = calibration;
       this.positions = positions;
-      this._rects = new int[10][4][3]; // finger : rect-cords : x, y, z
+      this._rects = new nrect[F.FINGERS_COUNT];
   }
   
   NPositions detect(PImage frame) {
@@ -28,9 +28,9 @@ class NDetection {
                   float wG = green(calibration.fingers[f]);
                   float wB = blue(calibration.fingers[f]);
                   // delta
-                  int dR = calibration._fingers_d[f][0];
-                  int dG = calibration._fingers_d[f][1];
-                  int dB = calibration._fingers_d[f][2];
+                  float dR = calibration._fingers_d[f].dr;
+                  float dG = calibration._fingers_d[f].dg;
+                  float dB = calibration._fingers_d[f].db;
                   if ((cR <= wR + dR) && (cR >= wR - dR) &&
                       (cG <= wG + dG) && (cG >= wG - dG) &&
                       (cR <= wB + dB) && (cR >= wB - dB)) {
@@ -46,11 +46,8 @@ class NDetection {
   
   void _clearRects() {
       for (int f = 0; f < 10; f++) {
-          for (int r = 0; r < 4; r++) {
-              for (int c = 0; c <= 3; c++) {
-                  this._rects[f][r][c] = -1;
-              }
-          }
+          if (_rects[f] == null) _rects[f] = new nrect();
+          else _rects[f].reset();
       }    
   }
   

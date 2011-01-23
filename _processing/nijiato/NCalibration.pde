@@ -2,10 +2,10 @@ class NCalibration {
   
     final int DETECTION_TIME = 10000;
   
-    color[] fingers = new color[10];
-    color[] hands = new color[2];
-    byte[][] _fingers_d = new byte[10][3]; // deltas
-    byte[][] _hands_d = new byte[2][3]; // deltas    
+    color[] fingers = new color[F.FINGERS_COUNT];
+    color[] hands = new color[H.HANDS_COUNT];
+    ndelta[] _fingers_d = new ndelta[F.FINGERS_COUNT];
+    ndelta[] _hands_d = new ndelta[F.FINGERS_COUNT];
     int _lastDetectionTime = 0;
     
     int _rTopX, _rTopY, _rWidth, _rHeight;
@@ -13,17 +13,13 @@ class NCalibration {
     PImage _curFrame;
     
     public NCalibration() {
-        for (int i = 0; i < 10; i++) fingers[i] = -1;
-        for (int i = 0; i < 2; i++) hands[i] = -1;        
-        for (int i = 0; i < 10; i++) {
-            for (int j = 0; j < 3; j++) {
-                _fingers_d[i][j] = 4;
-            }
+        for (int f = 0; f < F.FINGERS_COUNT; f++) fingers[f] = -1;
+        for (int h = 0; h < H.HANDS_COUNT; h++) hands[h] = -1;      
+        for (int f = 0; f < F.FINGERS_COUNT; f++) {
+            _fingers_d[f] = new ndelta();
         }
-        for (int i = 0; i < 2; i++) {
-            for (int j = 0; j < 3; j++) {
-                _hands_d[i][j] = 4;
-            }
+        for (int h = 0; h < H.HANDS_COUNT; h++) {
+            _hands_d[h] = new ndelta();
         }
     }
     
@@ -52,10 +48,10 @@ class NCalibration {
     }    
     
     int getLastNotCalibratedFinger() {
-        int i = 0;
-        while (i < 10) {
-            if (fingers[i] == -1) return i;
-            i++;
+        int f = 0;
+        while (f < 10) {
+            if (fingers[f] == -1) return f;
+            f++;
         }
         return -1;
     }
@@ -111,18 +107,18 @@ class NCalibration {
     }
     
     void _showAlreadyDetected() {
-        for (int i = 0; i < 10; i++) {
-            if (fingers[i] != -1) {
-              stroke(255);
-              fill(fingers[i]);
-              rect(i << 5, 0, 31, 31);
-           }
+        for (int f = 0; f < 10; f++) {
+            if (fingers[f] != -1) {
+               stroke(255);
+               fill(fingers[f]);
+               rect(f << 5, 0, 31, 31);
+            }
         }
-        for (int i = 0; i < 2; i++) {
-            if (hands[i] != -1) {
-              stroke(255);
-              fill(hands[i]);
-              rect(i << 5, 32, 31, 31);
+        for (int h = 0; h < 2; h++) {
+            if (hands[h] != -1) {
+               stroke(255);
+               fill(hands[h]);
+               rect(h << 5, 32, 31, 31);
            }
         }        
     }  
