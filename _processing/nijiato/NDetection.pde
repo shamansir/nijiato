@@ -44,10 +44,10 @@ class NDetection {
   
   void _adaptInRect(nrect cr, ncoord coord) {
       if (cr.is_set()) return;
-      cr.p1.update(5, 10, -1);
-      cr.p2.update(10, 10, -1);
-      cr.p3.update(10, 20, -1);
-      cr.p4.update(5, 20, -1);
+      cr.p1.update(coord.x, coord.y, -1);
+      cr.p2.update(coord.x + 25, coord.y, -1);
+      cr.p3.update(coord.x + 25, coord.y + 25, -1);
+      cr.p4.update(coord.x, coord.y + 25, -1);
       /* if (!cr.p1.is_set()) {
           cr.p1.update(coord); return;
       } else if (!cr.p2.is_set()) {
@@ -60,19 +60,23 @@ class NDetection {
   }
   
   void _sortRects() {
+      /* for (int f = 0; f < F.FINGERS_COUNT; f++) {
+      }
+      for (int h = 0; h < H.HANDS_COUNT; h++) {
+      } */
   }
   
   void showRects() {
       stroke(255);
       for (int f = 0; f < F.FINGERS_COUNT; f++) {
-          fill(calibration.fingers[f], 100);
+          fill(calibration.fingers[f], 225);
           quad(_frects[f].p1.x, _frects[f].p1.y,
                _frects[f].p2.x, _frects[f].p2.y,
                _frects[f].p3.x, _frects[f].p3.y,
                _frects[f].p4.x, _frects[f].p4.y);
       }
       for (int h = 0; h < H.HANDS_COUNT; h++) {
-          fill(calibration.hands[h], 100);
+          fill(calibration.hands[h], 225);
           quad(_hrects[h].p1.x, _hrects[h].p1.y,
                _hrects[h].p2.x, _hrects[h].p2.y,
                _hrects[h].p3.x, _hrects[h].p3.y,
