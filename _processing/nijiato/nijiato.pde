@@ -10,6 +10,7 @@ class H {
     static final byte RIGHT_HAND = 1;
     
     static final byte HANDS_COUNT = 2;
+    // change to 1 to detect just one hand    
 }
 
 class F {
@@ -25,7 +26,8 @@ class F {
     static final byte RIGHT_RING = 8;
     static final byte RIGHT_LITTLE = 9;
     
-    static final byte FINGERS_COUNT = 10;
+    static final byte FINGERS_COUNT = 10; 
+    // change to 5 to detect just one hand
 }
 
 class ncoord { int x, y, z; 
@@ -37,6 +39,14 @@ class ncoord { int x, y, z;
 class ndelta { float dr, dg, db;
     ndelta() { dr = 0; dg = 0; db = 0; }
     ndelta(float _dr, int _dg, int _db) { dr = _dr; dg = _dg; db = _db; }
+    boolean matches(color current, color wanted) {
+        float cr = red(current); float cg = green(current); float cb = blue(current);
+        // wanted
+        float wr = red(wanted); float wg = green(wanted); float wb = blue(wanted);
+        return ((cr <= wr + dr) && (cr >= wr - dr) &&
+                (cg <= wg + dg) && (cg >= wg - dg) &&
+                (cb <= wb + db) && (cb >= wb - db));      
+    }
 }
 
 class nrect { ncoord tl, tr, bl, br; 

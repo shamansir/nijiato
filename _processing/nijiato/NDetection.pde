@@ -18,23 +18,10 @@ class NDetection {
           for (int y = 0; y <= height; y++) {
               color curColor = px[y*width+x];
               
-              for (int f = 0; f < 10; f++) {
-                  // current
-                  float cR = red(curColor); 
-                  float cG = green(curColor);
-                  float cB = blue(curColor);
-                  // wanted
-                  float wR = red(calibration.fingers[f]);
-                  float wG = green(calibration.fingers[f]);
-                  float wB = blue(calibration.fingers[f]);
-                  // delta
-                  float dR = calibration._fingers_d[f].dr;
-                  float dG = calibration._fingers_d[f].dg;
-                  float dB = calibration._fingers_d[f].db;
-                  if ((cR <= wR + dR) && (cR >= wR - dR) &&
-                      (cG <= wG + dG) && (cG >= wG - dG) &&
-                      (cR <= wB + dB) && (cR >= wB - dB)) {
-                      // TODO: manipulate detected pixel
+              for (int f = 0; f < F.FINGERS_COUNT; f++) {
+                  if (calibration._fingers_d[f]
+                          .matches(curColor, calibration.figers[f])) {
+                      _adaptInRect(f, x, y, -1);
                   }
               }
               
@@ -42,6 +29,11 @@ class NDetection {
           }    
       }
       return positions;      
+  }
+  
+  void _adaptInRect(int finger, int x, int y, int z) {
+      nrect cur_rect = _rects[f];
+      // TODO: check if it is tl corner defined, check distance
   }
   
   void _clearRects() {
