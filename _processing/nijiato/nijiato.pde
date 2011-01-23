@@ -43,7 +43,7 @@ class ncoord { int x, y, z;
 }
 
 class ndelta { float dr, dg, db;
-    ndelta() { dr = 0; dg = 0; db = 0; }
+    ndelta() { dr = 4; dg = 4; db = 4; }
     ndelta(float _dr, int _dg, int _db) { dr = _dr; dg = _dg; db = _db; }
     boolean matches(color current, color wanted) {
         float cr = red(current); float cg = green(current); float cb = blue(current);
@@ -61,7 +61,8 @@ class nrect { ncoord p1, p2, p3, p4;
     void reset() { p1.reset(); p2.reset(); 
                    p3.reset(); p4.reset(); }
     boolean is_set() { return p1.is_set() && p2.is_set() &&
-                              p3.is_set() && p4.is_set(); }  
+                              p3.is_set() && p4.is_set(); }
+    void sortquad() { }
 }
 
 class NPositions {

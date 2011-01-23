@@ -1,6 +1,6 @@
 class NCalibration {
   
-    final int DETECTION_TIME = 3000;
+    final int DETECTION_TIME = 7000;
   
     color[] fingers = new color[F.FINGERS_COUNT];
     color[] hands = new color[H.HANDS_COUNT];

@@ -60,10 +60,8 @@ class NDetection {
   }
   
   void _sortRects() {
-      /* for (int f = 0; f < F.FINGERS_COUNT; f++) {
-      }
-      for (int h = 0; h < H.HANDS_COUNT; h++) {
-      } */
+      for (int f = 0; f < F.FINGERS_COUNT; f++) _frects[f].sortquad();
+      for (int h = 0; h < H.HANDS_COUNT; h++) _hrects[h].sortquad();
   }
   
   void showRects() {
