@@ -55,14 +55,10 @@ class ndelta { float dr, dg, db;
     }
 }
 
-class nrect { ncoord p1, p2, p3, p4; 
-    nrect() { p1 = new ncoord(); p2 = new ncoord();
-              p3 = new ncoord(); p4 = new ncoord(); }
-    void reset() { p1.reset(); p2.reset(); 
-                   p3.reset(); p4.reset(); }
-    boolean is_set() { return p1.is_set() && p2.is_set() &&
-                              p3.is_set() && p4.is_set(); }
-    void sortquad() { }
+class nclist { ArrayList coords; 
+    nclist() { coords = new ArrayList(); }
+    void reset() { coords.clear(); }
+    void sortpolar() { }
 }
 
 class NPositions {
@@ -117,7 +113,7 @@ void draw() {
     
     if (!calibrating) {
         NPositions positions = detection.detect(curImage);
-        detection.showRects();
+        detection.showPolys();
     } else {
         calibration.frame(curImage);
         int curFinger;

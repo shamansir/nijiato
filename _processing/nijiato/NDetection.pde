@@ -4,18 +4,18 @@ class NDetection {
   
   NCalibration calibration;
   NPositions positions;
-  nrect[] _frects;
-  nrect[] _hrects;
+  nclist[] _fpts;
+  nclist[] _hpts;
   
   NDetection(NCalibration calibration, NPositions positions) {
       this.calibration = calibration;
       this.positions = positions;
-      this._frects = new nrect[F.FINGERS_COUNT];
-      this._hrects = new nrect[H.HANDS_COUNT];
+      this._fpts = new nclist[F.FINGERS_COUNT];
+      this._hpts = new nclist[H.HANDS_COUNT];
   }
   
   NPositions detect(PImage frame) {
-      _clearRects();
+      _forgetPoints();
       frame.loadPixels();
       color[] px = frame.pixels; 
       for (int x = 0; x < width; x++) {
@@ -25,46 +25,36 @@ class NDetection {
               for (int f = 0; f < F.FINGERS_COUNT; f++) {
                   if (calibration._fingers_d[f]
                           .matches(curColor, calibration.fingers[f])) {
-                      _adaptInRect(_frects[f], new ncoord(x, y, -1));
+                      _adaptInList(_fpts[f], new ncoord(x, y, -1));
                   }
               }
               
               for (int h = 0; h < H.HANDS_COUNT; h++) {
                   if (calibration._hands_d[h]
                           .matches(curColor, calibration.hands[h])) {
-                      _adaptInRect(_hrects[h], new ncoord(x, y, -1));
+                      _adaptInList(_hpts[h], new ncoord(x, y, -1));
                   }
               }
           }    
       }
-      _sortRects();
-      // TODO: get center points from rects
+      // TODO: 1. filter points that too far
+      // TODO: 2. sort the rest by polar angle
+      // TODO: 3. build polygons on these points
+      // TODO: 4. detect the center points for this polygons, return them
+      _sortPoints();
       return positions;      
   }
   
-  void _adaptInRect(nrect cr, ncoord coord) {
-      if (cr.is_set()) return;
-      cr.p1.update(coord.x, coord.y, -1);
-      cr.p2.update(coord.x + 25, coord.y, -1);
-      cr.p3.update(coord.x + 25, coord.y + 25, -1);
-      cr.p4.update(coord.x, coord.y + 25, -1);
-      /* if (!cr.p1.is_set()) {
-          cr.p1.update(coord); return;
-      } else if (!cr.p2.is_set()) {
-          if (!cr.p1.near(coord)) cr.p1.update(coord);
-          else cr.p2.update(coord); return;          
-      } else if (!cr.p3.is_set()) {
-          // if (!cr.p2.near(coord)) cr.p2.update(coord);
-          cr.p3.update(coord);
-      } else cr.p4.update(coord); */
+  void _adaptInList(nclist cl, ncoord coord) {
   }
   
-  void _sortRects() {
-      for (int f = 0; f < F.FINGERS_COUNT; f++) _frects[f].sortquad();
-      for (int h = 0; h < H.HANDS_COUNT; h++) _hrects[h].sortquad();
+  void _sortPoints() {
+      for (int f = 0; f < F.FINGERS_COUNT; f++) _fpts[f].sortpolar();
+      for (int h = 0; h < H.HANDS_COUNT; h++) _hpts[h].sortpolar();
   }
   
-  void showRects() {
+  void showPolys() {
+      /* 
       stroke(255);
       for (int f = 0; f < F.FINGERS_COUNT; f++) {
           fill(calibration.fingers[f], 225);
@@ -79,17 +69,17 @@ class NDetection {
                _hrects[h].p2.x, _hrects[h].p2.y,
                _hrects[h].p3.x, _hrects[h].p3.y,
                _hrects[h].p4.x, _hrects[h].p4.y);
-      }      
+      } */
   }
   
-  void _clearRects() {
+  void _forgetPoints() {
       for (int f = 0; f < F.FINGERS_COUNT; f++) {
-          if (_frects[f] == null) _frects[f] = new nrect();
-          else _frects[f].reset();
+          if (_fpts[f] == null) _fpts[f] = new nclist();
+          else _fpts[f].reset();
       }
       for (int h = 0; h < H.HANDS_COUNT; h++) {
-          if (_hrects[h] == null) _hrects[h] = new nrect();
-          else _hrects[h].reset();
+          if (_hpts[h] == null) _hpts[h] = new nclist();
+          else _hpts[h].reset();
       }      
   }
   
