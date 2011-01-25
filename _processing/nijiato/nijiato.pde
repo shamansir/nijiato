@@ -133,13 +133,13 @@ void draw() {
 }
 
 void keyReleased() {
-    if (key == 'r') calibrating = true;    
+    if (key == 'r') {
+        if (calibration != null) calibration.reset();
+        calibrating = true;
+    }
 }
 
 void keyPressed() {
     if (key == 'y') if (detection != null) detection.showPolys();   
-    if (key == 'm') if (calibration != null) {
-        calibration.reset();
-        calibration.showAllDetected(); 
-    }
+    if (key == 'm') if (calibration != null) calibration.showAllDetected();
 }

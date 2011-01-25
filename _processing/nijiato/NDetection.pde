@@ -73,7 +73,7 @@ class NDetection {
           for (int i = 0; i < hpts.length; i++) {
               point(hpts.get(i).x, hpts.get(i).y);
           }
-      }      
+      }   
   }
   
   void _forgetPoints() {
