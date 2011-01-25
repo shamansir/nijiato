@@ -59,7 +59,7 @@ class NDetection {
   void showPolys() {
       noFill();
       for (int f = 0; f < F.FINGERS_COUNT; f++) {
-          stroke(calibration.fingers[f]);
+          stroke(lerpColor(calibration.fingers[f], color(0), 0.5));
           nclist fpts = _fpts[f];
           println(f + "f: " + fpts.length);
           for (int i = 0; i < fpts.length; i++) {
@@ -67,7 +67,7 @@ class NDetection {
           }
       }
       for (int h = 0; h < H.HANDS_COUNT; h++) {
-          stroke(calibration.hands[h]);
+          stroke(lerpColor(calibration.hands[h], color(0), 0.5));
           nclist hpts = _hpts[h];
           println(h + "h: " + hpts.length);          
           for (int i = 0; i < hpts.length; i++) {

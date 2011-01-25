@@ -112,7 +112,7 @@ void draw() {
     
     if (!calibrating) {
         NPositions positions = detection.detect(curImage);
-        detection.showPolys();
+        detection.showPolys(); // TODO: remove
     } else {
         calibration.frame(curImage);
         int curFinger;
@@ -137,5 +137,9 @@ void keyReleased() {
 }
 
 void keyPressed() {
-    if (key == 'm') if (calibration != null) calibration.showAllDetected(); 
+    if (key == 'y') if (detection != null) detection.showPolys();   
+    if (key == 'm') if (calibration != null) {
+        calibration.reset();
+        calibration.showAllDetected(); 
+    }
 }
