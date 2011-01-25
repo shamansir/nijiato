@@ -30,16 +30,25 @@ class F {
     // change to 5 to detect just one hand
 }
 
+class NPositions {
+    
+    ncoord[] fingers;
+    ncoord[] hands;
+
+    NPositions() {
+        fingers = new ncoord[F.FINGERS_COUNT];
+        hands = new ncoord[H.HANDS_COUNT];
+    }
+
+}
+
 class ncoord { int x, y, z; 
     ncoord() { x = -1; y = -1; z = -1; }
     ncoord(int _x, int _y, int _z) { x = _x; y = _y; z = _z; }
     void reset() { x = -1; y = -1; z = -1; }
     void update(int _x, int _y, int _z) { x = _x; y = _y; z = _z; }
     void update(ncoord other) { x = other.x; y = other.y; z = other.z; }
-    boolean is_set() { return (x != -1) && (y != -1); }
-    boolean near(ncoord other)  { return (abs(other.x - x) <= 32) &&
-                                         (abs(other.y - y) <= 32) &&
-                                         (abs(other.z - z) <= 32); }
+    boolean is_set() { return (x != -1) && (y != -1) && (z != -1); }
 }
 
 class ndelta { float dr, dg, db;
@@ -55,22 +64,12 @@ class ndelta { float dr, dg, db;
     }
 }
 
-class nclist { ArrayList coords; 
-    nclist() { coords = new ArrayList(); }
-    void reset() { coords.clear(); }
-    void sortpolar() { }
-}
-
-class NPositions {
-    
-    ncoord[] fingers;
-    ncoord[] hands;
-
-    NPositions() {
-        fingers = new ncoord[F.FINGERS_COUNT];
-        hands = new ncoord[H.HANDS_COUNT];
-    }
-
+class nclist { ArrayList coords; int length;
+    nclist() { coords = new ArrayList(); length = 0; }
+    void reset() { coords.clear(); length = 0; }
+    ncoord add(ncoord coord) { coords.add(coord); length++; return coord; } 
+    ncoord get(int i) { return ((ncoord)coords.get(i)); }
+    /* void sortpolar() { } */
 }
 
 NPositions positions = new NPositions();
@@ -80,7 +79,7 @@ PFont _font;
 
 void setup() {
   
-    size(320,240);
+    size(320,240,P2D);
     
     calibration.init();
     
@@ -134,5 +133,9 @@ void draw() {
 }
 
 void keyReleased() {
-    if (key == 'r') calibrating = true; 
+    if (key == 'r') calibrating = true;    
+}
+
+void keyPressed() {
+    if (key == 'm') if (calibration != null) calibration.showAllDetected(); 
 }

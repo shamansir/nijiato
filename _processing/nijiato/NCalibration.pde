@@ -1,6 +1,7 @@
 class NCalibration {
   
     final int DETECTION_TIME = 7000;
+    final int CDELTA = 10; // color component delta
   
     color[] fingers = new color[F.FINGERS_COUNT];
     color[] hands = new color[H.HANDS_COUNT];
@@ -16,10 +17,10 @@ class NCalibration {
         for (int f = 0; f < F.FINGERS_COUNT; f++) fingers[f] = -1;
         for (int h = 0; h < H.HANDS_COUNT; h++) hands[h] = -1;      
         for (int f = 0; f < F.FINGERS_COUNT; f++) {
-            _fingers_d[f] = new ndelta();
+            _fingers_d[f] = new ndelta(CDELTA, CDELTA, CDELTA);
         }
         for (int h = 0; h < H.HANDS_COUNT; h++) {
-            _hands_d[h] = new ndelta();
+            _hands_d[h] = new ndelta(CDELTA, CDELTA, CDELTA);
         }
     }
     
@@ -139,5 +140,9 @@ class NCalibration {
         //println("detecting hand " + hand + ": " + int((DETECTION_TIME - elapsed) / 1000));
         return;      
     }  
+    
+    void showAllDetected() {
+        _showAlreadyDetected();
+    }
     
 }
