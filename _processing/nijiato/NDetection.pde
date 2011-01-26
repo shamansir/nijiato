@@ -20,8 +20,8 @@ class NDetection {
       color[] px = frame.pixels;
       color[] fingers = calibration.fingers;
       color[] hands = calibration.hands;
-      ndelta[] fdeltas = calibration._fingers_d;
-      ndelta[] hdeltas = calibration._hands_d;
+      ndelta[] fdeltas = calibration.fdeltas;
+      ndelta[] hdeltas = calibration.hdeltas;
       for (int x = 0; x < width; x++) {
           for (int y = 0; y < height; y++) {
               color curColor = px[y*width+x];

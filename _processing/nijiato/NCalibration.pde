@@ -1,12 +1,15 @@
 class NCalibration {
   
     final int DETECTION_TIME = 7000;
-    final int CDELTA = 6; // color component delta
+    final int CDELTA = 6; // default color component delta
+    final float MID_COEF = 0.5; // coefficient to calculate median color    
+    final float DELTA_COEF = 0.2; // coefficient to calculate delta for median color
   
     color[] fingers = new color[F.FINGERS_COUNT];
     color[] hands = new color[H.HANDS_COUNT];
-    ndelta[] _fingers_d = new ndelta[F.FINGERS_COUNT];
-    ndelta[] _hands_d = new ndelta[F.FINGERS_COUNT];
+    ndelta[] fdeltas = new ndelta[F.FINGERS_COUNT];
+    ndelta[] hdeltas = new ndelta[F.FINGERS_COUNT];
+    ndelta _lastDelta = new ndelta(CDELTA, CDELTA, CDELTA);    
     int _lastDetectionTime = 0;
     
     int _rTopX, _rTopY, _rWidth, _rHeight;
@@ -33,11 +36,15 @@ class NCalibration {
         _curFrame.loadPixels();
         color[] px = _curFrame.pixels;
         color last = px[_rTopY*width+_rTopX];
+        ndelta delta = new ndelta(0, 0, 0);
         for (int x = _rTopX; x <= (_rTopX + _rWidth); x++) {
             for (int y = _rTopY; y <= (_rTopY + _rHeight); y++) {
-                last = lerpColor(px[y*width+x], last, 0.5);
+                color cur = px[y*width+x];
+                last = lerpColor(cur, last, MID_COEF);
+                delta.adapt(cur, last, DELTA_COEF);
             }    
         }
+        _lastDelta = delta;
         return last;
     }    
     
@@ -63,7 +70,7 @@ class NCalibration {
             _detectFinger(finger);
             _lastDetectionTime = millis();
             _showAlreadyDetected();            
-            _showDetected("finger", finger, fingers[finger], 0);
+            _showDetected(finger, fingers[finger], 0);
         } else {
             _showAlreadyDetected();
             _showDetectionRect();            
@@ -78,7 +85,7 @@ class NCalibration {
             _detectHand(hand);
             _lastDetectionTime = millis();
             _showAlreadyDetected();
-            _showDetected("hand", hand, hands[hand], 32);
+            _showDetected(hand, hands[hand], 32);            
         } else {
             _showAlreadyDetected();
             _showDetectionRect();
@@ -94,10 +101,14 @@ class NCalibration {
     
     void _detectFinger(int finger) {        
         fingers[finger] = _colorInRect();
+        fdeltas[finger] = _lastDelta;
+        println("calibrated " + F.getName((byte)finger) + ": " + fingers[finger] + ". Delta is " + fdeltas[finger]);
     }
   
     void _detectHand(int hand) {
         hands[hand] = _colorInRect();
+        hdeltas[hand] = _lastDelta;
+        println("calibrated " + H.getName((byte)hand) + ": " + hands[hand] + ". Delta is " + hdeltas[hand]);
     }
     
     void _showAlreadyDetected() {
@@ -117,11 +128,10 @@ class NCalibration {
         }        
     }  
     
-    void _showDetected(String name, int value, color result, int offset) {
+    void _showDetected(int value, color result, int offset) {
         stroke(255);
         fill(result);
         rect(value << 5, offset, 31, 31);
-        //println("detected " + name + " (" + value + "): " + result);
     }
     
     void _showDetectionState(int value, int elapsed, int offset) {
@@ -130,8 +140,6 @@ class NCalibration {
         rect(value << 5, offset, 31, 31);
         fill(255);
         text(elapsed, (value << 5) + 9, offset + 26);
-        //println("detecting hand " + hand + ": " + int((DETECTION_TIME - elapsed) / 1000));
-        return;      
     }  
     
     void showAllDetected() {
@@ -142,10 +150,10 @@ class NCalibration {
         for (int f = 0; f < F.FINGERS_COUNT; f++) fingers[f] = -1;
         for (int h = 0; h < H.HANDS_COUNT; h++) hands[h] = -1;      
         for (int f = 0; f < F.FINGERS_COUNT; f++) {
-            _fingers_d[f] = new ndelta(CDELTA, CDELTA, CDELTA);
+            fdeltas[f] = new ndelta(CDELTA, CDELTA, CDELTA);
         }
         for (int h = 0; h < H.HANDS_COUNT; h++) {
-            _hands_d[h] = new ndelta(CDELTA, CDELTA, CDELTA);
+            hdeltas[h] = new ndelta(CDELTA, CDELTA, CDELTA);
         }      
     }
     

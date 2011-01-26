@@ -5,15 +5,17 @@ boolean calibrating = false;
 // DroidSans-28.vlw
 // DroidSans-42.vlw
 
-class H {
+static class H {
     static final byte LEFT_HAND = 0;
     static final byte RIGHT_HAND = 1;
     
     static final byte HANDS_COUNT = 2;
     // change to 1 to detect just one hand    
+    
+    static String getName(byte value) { return value + "h"; }
 }
 
-class F {
+static class F {
     static final byte LEFT_LITTLE = 0;
     static final byte LEFT_RING = 1;
     static final byte LEFT_MIDDLE = 2;
@@ -28,6 +30,8 @@ class F {
     
     static final byte FINGERS_COUNT = 10; 
     // change to 5 to detect just one hand
+    
+    static String getName(byte value) { return value + "f"; }    
 }
 
 class NPositions {
@@ -62,6 +66,13 @@ class ndelta { float dr, dg, db;
                 (cg <= wg + dg) && (cg >= wg - dg) &&
                 (cb <= wb + db) && (cb >= wb - db));      
     }
+    void adapt(color c1, color c2) { adapt(c1, c2, 0.3); }
+    void adapt(color c1, color c2, float coef) {
+         dr = max(abs(red(c1) - red(c2)) * coef, dr);
+         dg = max(abs(green(c1) - green(c2)) * coef, dg);
+         db = max(abs(blue(c1) - blue(c2)) * coef, db);        
+    }
+    String toString() { return dr + ";" + dg + ";" + db; }
 }
 
 class nclist { ArrayList coords; int length;
