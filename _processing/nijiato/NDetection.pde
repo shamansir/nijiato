@@ -32,11 +32,11 @@ class NDetection {
                   }
               }
               
-              for (int h = 0; h < H.HANDS_COUNT; h++) {
+              /* for (int h = 0; h < H.HANDS_COUNT; h++) {
                   if (hdeltas[h].matches(curColor, hands[h])) {
                       _storeCoord(_hpts[h], new ncoord(x, y, 0));
                   }
-              }
+              } */
           }    
       }
       // TODO: 1. filter points that too far

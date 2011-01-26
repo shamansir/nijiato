@@ -3,7 +3,7 @@ class NCalibration {
     final int DETECTION_TIME = 7000;
     final int CDELTA = 6; // default color component delta
     final float MID_COEF = 0.5; // coefficient to calculate median color    
-    final float DELTA_COEF = 0.2; // coefficient to calculate delta for median color
+    final float DELTA_COEF = 0.26; // coefficient to calculate delta for median color
   
     color[] fingers = new color[F.FINGERS_COUNT];
     color[] hands = new color[H.HANDS_COUNT];
@@ -102,13 +102,19 @@ class NCalibration {
     void _detectFinger(int finger) {        
         fingers[finger] = _colorInRect();
         fdeltas[finger] = _lastDelta;
-        println("calibrated " + F.getName((byte)finger) + ": " + fingers[finger] + ". Delta is " + fdeltas[finger]);
+        println("calibrated " + F.getName((byte)finger) + ": " +
+                                red(fingers[finger]) + ";" + 
+                                green(fingers[finger]) + ";" +
+                                blue(fingers[finger]) + ". Delta is " + fdeltas[finger]);
     }
   
     void _detectHand(int hand) {
         hands[hand] = _colorInRect();
         hdeltas[hand] = _lastDelta;
-        println("calibrated " + H.getName((byte)hand) + ": " + hands[hand] + ". Delta is " + hdeltas[hand]);
+        println("calibrated " + H.getName((byte)hand) + ": " + 
+                                red(hands[hand]) + ";" + 
+                                green(hands[hand]) + ";" +
+                                blue(hands[hand]) + ". Delta is " + hdeltas[hand]);
     }
     
     void _showAlreadyDetected() {
