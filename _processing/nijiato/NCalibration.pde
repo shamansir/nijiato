@@ -2,7 +2,7 @@ class NCalibration {
   
     final int DETECTION_TIME = 7000;
     final int CDELTA = 6; // default color component delta
-    final float MID_COEF = 0.5; // coefficient to calculate median color    
+    //final float MID_COEF = 0.5; // coefficient to calculate median color    
     final float DELTA_COEF = 0.26; // coefficient to calculate delta for median color
   
     color[] fingers = new color[F.FINGERS_COUNT];
@@ -40,7 +40,8 @@ class NCalibration {
         for (int x = _rTopX; x <= (_rTopX + _rWidth); x++) {
             for (int y = _rTopY; y <= (_rTopY + _rHeight); y++) {
                 color cur = px[y*width+x];
-                last = lerpColor(cur, last, MID_COEF);
+                //last = leprColor(cur, last, );
+                last = blendColor(cur, last, BURN);
                 delta.adapt(cur, last, DELTA_COEF);
             }    
         }
