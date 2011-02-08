@@ -2,6 +2,8 @@ import hypermedia.video.*;
 
 OpenCV opencv;
 int threshold = 80;
+int minDiam = 15;
+int maxDiam = 120;
 int startX = -1; int startY = -1;
 int foundX = -1; int foundY = -1;
 
@@ -56,6 +58,21 @@ void mousePressed() {
 }
 
 boolean lookForPossibleCephalo(color[] pxs) {
+    stroke(color(255, 0, 0));
+    fill(255);
+    //ellipse(50, 50, 20, 20);
+    int x; int y;
+    int pointsCount;
+    // left edge
+    for (x = (foundX + 1), y = (foundY + 1); y < height; y++) { 
+        
+    }
+    // right edge
+    for (x = (width - 1), y = 0; y < height; y++) { }
+    // top edge
+    for (x = 0, y = 0; x < width; x++) { }
+    // bottom edge
+    for (x = 0, y = (height - 1); x < width; x++) { }    
     return false;
 }
 
