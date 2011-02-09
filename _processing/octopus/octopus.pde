@@ -49,7 +49,7 @@ void draw() {
         // for each of these start points
         for (int fIdx = 0; fIdx < MAX_CHAINS; fIdx++) {
             // if found point is set
-            if ((foundPoints[fIdx] >= 0) && (foundPoints[fIdx + 1] >= 0)) {
+            if ((foundPoints[fIdx << 1] >= 0) && (foundPoints[(fIdx << 1) + 1] >= 0)) {
                 // try to build and draw a chain growing from this point
                 drawChain(buildChain(pxs, foundPoints[fIdx], foundPoints[fIdx + 1]));
             }
@@ -98,19 +98,19 @@ class ChainsDetector {
             for (x = 0, y = 0; x < width; x++) _scanPoint(x, y, pxs[y*width+x]);
             // bottom edge
             for (x = 0, y = (height - 1); x < width; x++) _scanPoint(x, y, pxs[y*width+x]);
-        } catch(AllPointsAreFound apaf) { println("catched apaf"); return; }
+        } catch(AllPointsAreFound apaf) { return; }
         
     }
     
     void _scanPoint(int x, int y, color _clr) throws AllPointsAreFound {
         if (red(_clr) == 255) pointsCount++;
         else pointsCount = 0;
-        if (pointsCount >= (minRad * 2)) {
+        if (pointsCount >= (minRad << 1)) {
             pointsCount = 0;
-            foundPoints[foundCount] = x;
-            foundPoints[foundCount + 1] = y;
+            // TODO: store not these x and y, but x and y of center point
+            foundPoints[foundCount << 1] = x;
+            foundPoints[(foundCount << 1) + 1] = y;
             foundCount++;
-            println("foundCount: " + foundCount);
             if (foundCount >= MAX_CHAINS) {
                 pointsCount = 0;
                 foundCount = 0;
@@ -123,8 +123,8 @@ class ChainsDetector {
         stroke(color(255, 0, 0));
         fill(255);
         for (int fIdx = 0; fIdx < MAX_CHAINS; fIdx++) {
-            if ((foundPoints[fIdx] >= 0) && (foundPoints[fIdx + 1] >= 0)) {
-                ellipse(foundPoints[fIdx], foundPoints[fIdx + 1], 10, 10); 
+            if ((foundPoints[fIdx << 1] >= 0) && (foundPoints[(fIdx << 1) + 1] >= 0)) {
+                ellipse(foundPoints[fIdx << 1], foundPoints[(fIdx << 1) + 1], 10, 10); 
             }
         }         
     }
