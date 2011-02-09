@@ -5,10 +5,10 @@ int MAX_CHAINS = 8; // maximum number of cephalopoda chains to search
 OpenCV opencv;
 
 int threshold = 80;
-int minRad = 8; // minimum cephalo radius
+int minRad = 12; // minimum cephalo radius
 int maxRad = 60; // maximum cephalo radius
 int startX = -1; int startY = -1;
-int[] foundPoints = new int[MAX_CHAINS * 2]; // found chains' start points
+int[] foundPoints = new int[MAX_CHAINS << 1]; // found chains' start points
 
 int tentacles_num = 8;
 
@@ -81,7 +81,7 @@ class ChainsDetector {
     void lookForPossibleChains(color[] pxs) {
 
         // clear found points cache
-        for (int i = 0; i < (MAX_CHAINS * 2); i++) {
+        for (int i = 0; i < (MAX_CHAINS << 1); i++) {
             foundPoints[i] = -1;
         }
       
@@ -91,32 +91,30 @@ class ChainsDetector {
       
         try {
             // left edge
-            for (x = 0, y = 0; y < height; y++) _scanPoint(x, y, pxs[y*width+x]);
+            for (x = 0, y = 0; y < height; y++) _scanPoint(x, y, pxs[y*width+x], false); pointsCount = 0;
             // right edge
-            for (x = (width - 1), y = 0; y < height; y++) _scanPoint(x, y, pxs[y*width+x]);
-            // top edge
-            for (x = 0, y = 0; x < width; x++) _scanPoint(x, y, pxs[y*width+x]);
+            for (x = (width - 1), y = 0; y < height; y++) _scanPoint(x, y, pxs[y*width+x], false); pointsCount = 0;
             // bottom edge
-            for (x = 0, y = (height - 1); x < width; x++) _scanPoint(x, y, pxs[y*width+x]);
+            for (x = 0, y = (height - 1); x < width; x++) _scanPoint(x, y, pxs[y*width+x], true); pointsCount = 0;
+            // top edge
+            for (x = 0, y = 0; x < width; x++) _scanPoint(x, y, pxs[y*width+x], true); pointsCount = 0;
         } catch(AllPointsAreFound apaf) { return; }
         
     }
     
-    void _scanPoint(int x, int y, color _clr) throws AllPointsAreFound {
+    void _scanPoint(int x, int y, color _clr, boolean horz) throws AllPointsAreFound {
         if (red(_clr) == 255) pointsCount++;
-        else pointsCount = 0;
-        if (pointsCount >= (minRad << 1)) {
-            pointsCount = 0;
-            // TODO: store not these x and y, but x and y of center point
-            foundPoints[foundCount << 1] = x;
-            foundPoints[(foundCount << 1) + 1] = y;
+        else if (pointsCount >= (minRad << 1)) {
+            foundPoints[foundCount << 1] = horz ? (x - (pointsCount >> 1)) : x;
+            foundPoints[(foundCount << 1) + 1] = horz ? y : (y - (pointsCount >> 1));
+            pointsCount = 0;            
             foundCount++;
             if (foundCount >= MAX_CHAINS) {
                 pointsCount = 0;
                 foundCount = 0;
                 throw new AllPointsAreFound();
             }
-        }  
+        }
     }  
     
     void drawFoundPoints() {
