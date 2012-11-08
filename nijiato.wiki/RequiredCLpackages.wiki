@@ -1,0 +1,18 @@
+#summary Common Lisp packages, required to run the code
+
+(Links are pointing to repositories)
+
+ * [http://common-lisp.net/project/babel/darcs/babel CL-Babel]
+ * [http://common-lisp.net/project/iterate/darcs/iterate CL-Iterate]
+ * [http://common-lisp.net/~loliveira/darcs/trivial-features CL-Trivial-Features]
+ * [http://common-lisp.net/~loliveira/darcs/trivial-garbage CL-Trivial-Garbage]
+ * [http://common-lisp.net/project/closer/darcs/closer-mop CL-Closer-Mop]
+ * [http://common-lisp.net/project/cffi/darcs/cffi CL-CFFI]
+ * [git://common-lisp.net/projects/alexandria/alexandria.git CL-Alexandria]
+ * [git://gitorious.org/bordeaux-threads/bordeaux-threads.git CL-Bordeaux-Threads]
+ * [git://gitorious.org/iolib/iolib.git CL-IOLib]
+ * [http://github.com/3b/cl-opengl.git CL-OpenGL]
+ * [git://repo.or.cz/cl-gtk2.git CL-GTK2]
+ * [http://repo.or.cz/r/cl-v4l2.git CL-V4L2]
+
+Also see [http://code.google.com/p/nijiato/source/browse/requirements requirements] file

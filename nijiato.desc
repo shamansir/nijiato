@@ -1,0 +1,30 @@
+http://code.google.com/p/nijiato
+
+Simple fingers motion recognition using LISP, cl-v4l2 and colors-detection algorythm [v0.4] {Common Lisp}
+
+
+= Nijiato / 虹跡 = 
+
+Trying to detect fingers motion using rainbow-colored paper-marks.
+
+Uses: LISP (sbcl), [http://www.cliki.net/CL-V4L2 cl-v4l2]
+
+Algorythm description will be provided a little bit later
+
+虹跡 - _nijiato_ ,,(jap.),, - rainbow trail (may be, I'm not sure :))
+
+== Videos ==
+
+[http://vimeo.com/14073181 http://nijiato.googlecode.com/hg/images/vimeo-video-frame.png]
+
+== Slides about algorythm ==
+
+http://nijiato.googlecode.com/hg/images/nijiato-colors.png
+
+http://nijiato.googlecode.com/hg/images/nijiato-values.png
+
+http://nijiato.googlecode.com/hg/images/nijiato-distance.png
+
+http://nijiato.googlecode.com/hg/images/nijiato-angles.png
+
+
